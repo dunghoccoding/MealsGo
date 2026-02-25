@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: dacsan-backend
+  
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/dacsan_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:ZGFjc2FuU2VjcmV0S2V5Q2hhbmdlVGhpc0luUHJvZHVjdGlvblBsZWFzZU1ha2VJdFZlcnlMb25nQW5kU2VjdXJl}
+    expiration: 86400000 # 24 hours in milliseconds
+
+# Cloudinary Configuration (Disabled - using local storage)
+cloudinary:
+  enabled: false
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:your-cloud-name}
+  api-key: ${CLOUDINARY_API_KEY:your-api-key}
+  api-secret: ${CLOUDINARY_API_SECRET:your-api-secret}
+
+# Local file upload
+upload:
+  dir: uploads
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    com.dacsan: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
