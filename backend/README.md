@@ -6,7 +6,7 @@ Backend cho hệ thống đặt món ăn đặc sản Việt Nam 3 miền.
 
 - **Spring Boot**: 3.2.0
 - **Java**: 21
-- **Database**: PostgreSQL
+- **Database**: MySQL
 - **ORM**: Spring Data JPA + Hibernate
 - **Security**: Spring Security + JWT (JJWT 0.12.3)
 - **Real-time**: Spring WebSocket (SockJS + STOMP)
