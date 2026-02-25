@@ -6,7 +6,7 @@ Backend cho hệ thống đặt món ăn đặc sản Việt Nam 3 miền.
 
 - **Spring Boot**: 3.2.0
 - **Java**: 21
-- **Database**: PostgreSQL
+- **Database**: MySQL
 - **ORM**: Spring Data JPA + Hibernate
 - **Security**: Spring Security + JWT (JJWT 0.12.3)
 - **Real-time**: Spring WebSocket (SockJS + STOMP)
@@ -53,9 +53,9 @@ backend/
 
 ### Prerequisites
 
-- Java 21 (or Java 17)
+- Java 21 
 - Maven 3.8+
-- PostgreSQL 15+
+- MySQL
 
 ### 1. Setup Database
 
@@ -98,7 +98,7 @@ Swagger UI: `http://localhost:8080/swagger-ui.html`
 
 ## 📊 Database Schema Highlights
 
-### Multi-Vendor Order Splitting ⭐
+### Multi-Vendor Order Splitting 
 
 ```
 Order (Main order with delivery info)
@@ -112,7 +112,7 @@ Order (Main order with delivery info)
   - 1 Order: `ORD-20260209-00001`
   - 2 SubOrders: `ORD-20260209-00001-A`, `ORD-20260209-00001-B`
 
-### Product Variants ⭐
+### Product Variants 
 
 ```
 Product
@@ -148,13 +148,13 @@ JWT-based authentication with 3 roles:
 
 ## 📦 Key Features
 
-- ✅ Multi-vendor marketplace
-- ✅ Product variants (Size, Toppings, Customization)
-- ✅ Order splitting by vendor (SubOrders)
-- ✅ Real-time notifications (WebSocket)
-- ✅ Image upload (Cloudinary)
-- ✅ Database migrations (Flyway)
-- ✅ API documentation (Swagger)
+-  Multi-vendor marketplace
+-  Product variants (Size, Toppings, Customization)
+-  Order splitting by vendor (SubOrders)
+-  Real-time notifications (WebSocket)
+-  Image upload (Cloudinary)
+-  Database migrations (Flyway)
+-  API documentation (Swagger)
 
 ## 🧪 Testing
 
@@ -166,43 +166,3 @@ mvn test
 mvn test jacoco:report
 ```
 
-## 🚢 Deployment
-
-### Railway (Recommended)
-
-1. Push to GitHub
-2. Connect Railway to your repo
-3. Add PostgreSQL plugin
-4. Set environment variables:
-   ```
-   DATABASE_URL=<from Railway>
-   JWT_SECRET=<generate secure key>
-   CLOUDINARY_CLOUD_NAME=<your cloud>
-   CLOUDINARY_API_KEY=<your key>
-   CLOUDINARY_API_SECRET=<your secret>
-   ```
-
-### Render
-
-Similar to Railway, add PostgreSQL and set env vars.
-
-## 📝 Environment Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `jdbc:postgresql://...` |
-| `JWT_SECRET` | Secret key for JWT | Min 32 characters |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | `your-cloud` |
-| `CLOUDINARY_API_KEY` | API key | `123456789` |
-| `CLOUDINARY_API_SECRET` | API secret | `abc123...` |
-
-## 🤝 Contributing
-
-1. Create feature branch
-2. Make changes
-3. Write tests
-4. Submit PR
-
-## 📄 License
-
-MIT
