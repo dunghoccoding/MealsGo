@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test - Dacsan Backend</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #666;
+            margin-top: 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .notifications {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .notification {
+            background: #e3f2fd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #2196F3;
+        }
+        .notification.vendor {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        .notification.customer {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 12px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 WebSocket Real-time Notification Test</h1>
+    
+    <div class="container">
+        <!-- Vendor Panel -->
+        <div class="panel">
+            <h2>👨‍🍳 Vendor (Bếp)</h2>
+            <div>
+                <label>Vendor ID:</label>
+                <input type="number" id="vendorId" value="1">
+            </div>
+            <button id="connectVendor" onclick="connectVendor()">Connect as Vendor</button>
+            <button id="disconnectVendor" onclick="disconnectVendor()" disabled>Disconnect</button>
+            
+            <div id="vendorStatus" class="status disconnected">Disconnected</div>
+            
+            <h3>📬 Received Notifications:</h3>
+            <div id="vendorNotifications" class="notifications"></div>
+        </div>
+        
+        <!-- Customer Panel -->
+        <div class="panel">
+            <h2>🛍️ Customer (Khách hàng)</h2>
+            <div>
+                <label>Customer ID:</label>
+                <input type="number" id="customerId" value="1">
+            </div>
+            <button id="connectCustomer" onclick="connectCustomer()">Connect as Customer</button>
+            <button id="disconnectCustomer" onclick="disconnectCustomer()" disabled>Disconnect</button>
+            
+            <div id="customerStatus" class="status disconnected">Disconnected</div>
+            
+            <h3>📬 Received Notifications:</h3>
+            <div id="customerNotifications" class="notifications"></div>
+        </div>
+    </div>
+    
+    <div class="panel" style="margin-top: 20px;">
+        <h2>📝 Instructions</h2>
+        <ol>
+            <li>Click "Connect as Vendor" to subscribe to vendor notifications</li>
+            <li>Click "Connect as Customer" to subscribe to customer notifications</li>
+            <li>Use Postman/Swagger to:
+                <ul>
+                    <li>Create a new order → Vendor will receive notification</li>
+                    <li>Update sub-order status → Customer will receive notification</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <h3>Test Endpoints:</h3>
+        <code>POST http://localhost:8080/api/orders</code> - Create order<br>
+        <code>PATCH http://localhost:8080/api/orders/sub/{id}/status</code> - Update status
+    </div>
+
+    <script>
+        let vendorStompClient = null;
+        let customerStompClient = null;
+
+        function connectVendor() {
+            const vendorId = document.getElementById('vendorId').value;
+            const socket = new SockJS('http://localhost:8080/ws');
+            vendorStompClient = StompJs.Stomp.over(socket);
+            
+            vendorStompClient.connect({}, function(frame) {
+                console.log('Vendor connected:', frame);
+                document.getElementById('vendorStatus').textContent = 'Connected - Listening for new orders...';
+                document.getElementById('vendorStatus').className = 'status connected';
+                document.getElementById('connectVendor').disabled = true;
+                document.getElementById('disconnectVendor').disabled = false;
+                
+                // Subscribe to vendor orders topic
+                vendorStompClient.subscribe('/topic/vendor/' + vendorId + '/orders', function(message) {
+                    const notification = JSON.parse(message.body);
+                    displayVendorNotification(notification);
+                    playSound();
+                });
+            }, function(error) {
+                console.error('Vendor connection error:', error);
+                document.getElementById('vendorStatus').textContent = 'Connection failed: ' + error;
+                document.getElementById('vendorStatus').className = 'status disconnected';
+            });
+        }
+
+        function disconnectVendor() {
+            if (vendorStompClient) {
+                vendorStompClient.disconnect();
+                vendorStompClient = null;
+            }
+            document.getElementById('vendorStatus').textContent = 'Disconnected';
+            document.getElementById('vendorStatus').className = 'status disconnected';
+            document.getElementById('connectVendor').disabled = false;
+            document.getElementById('disconnectVendor').disabled = true;
+        }
+
+        function connectCustomer() {
+            const customerId = document.getElementById('customerId').value;
+            const socket = new SockJS('http://localhost:8080/ws');
+            customerStompClient = StompJs.Stomp.over(socket);
+            
+            customerStompClient.connect({}, function(frame) {
+                console.log('Customer connected:', frame);
+                document.getElementById('customerStatus').textContent = 'Connected - Listening for order updates...';
+                document.getElementById('customerStatus').className = 'status connected';
+                document.getElementById('connectCustomer').disabled = true;
+                document.getElementById('disconnectCustomer').disabled = false;
+                
+                // Subscribe to customer updates topic
+                customerStompClient.subscribe('/topic/customer/' + customerId + '/order-updates', function(message) {
+                    const notification = JSON.parse(message.body);
+                    displayCustomerNotification(notification);
+                    playSound();
+                });
+            }, function(error) {
+                console.error('Customer connection error:', error);
+                document.getElementById('customerStatus').textContent = 'Connection failed: ' + error;
+                document.getElementById('customerStatus').className = 'status disconnected';
+            });
+        }
+
+        function disconnectCustomer() {
+            if (customerStompClient) {
+                customerStompClient.disconnect();
+                customerStompClient = null;
+            }
+            document.getElementById('customerStatus').textContent = 'Disconnected';
+            document.getElementById('customerStatus').className = 'status disconnected';
+            document.getElementById('connectCustomer').disabled = false;
+            document.getElementById('disconnectCustomer').disabled = true;
+        }
+
+        function displayVendorNotification(notification) {
+            const div = document.createElement('div');
+            div.className = 'notification vendor';
+            div.innerHTML = `
+                <strong>🔔 ${notification.message}</strong><br>
+                <strong>Order:</strong> ${notification.orderNumber} (${notification.subOrderNumber})<br>
+                <strong>Items:</strong> ${notification.itemCount} món<br>
+                <strong>Subtotal:</strong> ${notification.subtotal.toLocaleString()}đ<br>
+                <strong>Customer:</strong> ${notification.customerName}<br>
+                <strong>Address:</strong> ${notification.deliveryAddress}<br>
+                <span class="timestamp">${new Date(notification.timestamp).toLocaleString()}</span>
+            `;
+            const container = document.getElementById('vendorNotifications');
+            container.insertBefore(div, container.firstChild);
+        }
+
+        function displayCustomerNotification(notification) {
+            const div = document.createElement('div');
+            div.className = 'notification customer';
+            div.innerHTML = `
+                <strong>📢 ${notification.message}</strong><br>
+                <strong>Order:</strong> ${notification.orderNumber} (${notification.subOrderNumber})<br>
+                <strong>Vendor:</strong> ${notification.vendorName}<br>
+                <strong>Status:</strong> ${notification.oldStatus} → <strong style="color: #4caf50">${notification.newStatus}</strong><br>
+                <span class="timestamp">${new Date(notification.timestamp).toLocaleString()}</span>
+            `;
+            const container = document.getElementById('customerNotifications');
+            container.insertBefore(div, container.firstChild);
+        }
+
+        function playSound() {
+            // Create a simple beep sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+    </script>
+</body>
+</html>
