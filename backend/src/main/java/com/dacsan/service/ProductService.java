@@ -145,6 +145,39 @@ public class ProductService {
         productRepository.delete(product);
     }
 
+    @Transactional
+    public ProductResponse adminUpdateProduct(Long id, UpdateProductRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (request.getName() != null)
+            product.setName(request.getName());
+        if (request.getDescription() != null)
+            product.setDescription(request.getDescription());
+        if (request.getBasePrice() != null)
+            product.setBasePrice(request.getBasePrice());
+        if (request.getRegion() != null)
+            product.setRegion(request.getRegion());
+        if (request.getCategory() != null)
+            product.setCategory(request.getCategory());
+        if (request.getImages() != null)
+            product.setImages(request.getImages());
+        if (request.getAvailable() != null)
+            product.setAvailable(request.getAvailable());
+        if (request.getFeatured() != null)
+            product.setFeatured(request.getFeatured());
+
+        product = productRepository.save(product);
+        return buildProductResponse(product);
+    }
+
+    @Transactional
+    public void adminDeleteProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        productRepository.delete(product);
+    }
+
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth.getPrincipal() instanceof User user) {

@@ -8,6 +8,7 @@ import CartPage from './pages/customer/CartPage'
 import ProfilePage from './pages/customer/ProfilePage'
 import CheckoutPage from './pages/customer/CheckoutPage'
 import VendorDashboardPage from './pages/vendor/VendorDashboardPage'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import { Toaster } from 'sonner'
 import NotificationToast from './components/common/NotificationToast'
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/vendor/dashboard" element={<VendorDashboardPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         </Route>
       </Routes>
     </>

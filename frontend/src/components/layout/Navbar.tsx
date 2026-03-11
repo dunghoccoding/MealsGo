@@ -92,6 +92,16 @@ export default function Navbar() {
                                                 Quản lý cửa hàng
                                             </Link>
                                         )}
+                                        {currentUser.role === 'ADMIN' && (
+                                            <Link
+                                                to="/admin/dashboard"
+                                                onClick={() => setShowUserMenu(false)}
+                                                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                            >
+                                                <span className="mr-2">⚙️</span>
+                                                Quản lý hệ thống
+                                            </Link>
+                                        )}
                                         <Link
                                             to="/profile"
                                             onClick={() => setShowUserMenu(false)}
