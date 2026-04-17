@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://localhost:3306/dacsan_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: ${DATABASE_USERNAME:root}
-    password: ${DATABASE_PASSWORD:}
+    password: ${DATABASE_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   jpa:

@@ -1,120 +1,456 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Facebook, Instagram, Youtube, Mail, Phone, Clock, X, ChevronDown, ChevronUp, ShieldCheck, RotateCcw, HelpCircle } from 'lucide-react'
+
+// FAQ data
+const faqItems = [
+    {
+        question: 'Làm thế nào để đặt hàng trên MealsGo?',
+        answer: 'Bạn chỉ cần chọn món ăn yêu thích, thêm vào giỏ hàng, điền thông tin giao hàng và tiến hành thanh toán. Đơn hàng sẽ được xác nhận ngay sau khi bạn hoàn tất thanh toán.'
+    },
+    {
+        question: 'Thời gian giao hàng mất bao lâu?',
+        answer: 'Thời gian giao hàng tùy thuộc vào khoảng cách và tình trạng giao thông, thường từ 20-45 phút. Bạn có thể theo dõi trạng thái đơn hàng trong mục "Đơn hàng của tôi".'
+    },
+    {
+        question: 'Tôi có thể hủy đơn hàng không?',
+        answer: 'Bạn có thể hủy đơn hàng trong vòng 5 phút sau khi đặt, trước khi nhà hàng bắt đầu chuẩn bị. Sau thời gian này, vui lòng liên hệ hotline để được hỗ trợ.'
+    },
+    {
+        question: 'MealsGo hỗ trợ những phương thức thanh toán nào?',
+        answer: 'Chúng tôi hỗ trợ thanh toán tiền mặt khi nhận hàng (COD), chuyển khoản ngân hàng, ví điện tử (MoMo, ZaloPay) và thẻ tín dụng/ghi nợ quốc tế.'
+    },
+    {
+        question: 'Làm sao để liên hệ với cửa hàng/nhà hàng?',
+        answer: 'Bạn có thể liên hệ trực tiếp với nhà hàng thông qua trang chi tiết đơn hàng hoặc gọi hotline hỗ trợ 0963 895 066 để được giải đáp nhanh nhất.'
+    },
+    {
+        question: 'Tôi có thể đánh giá món ăn sau khi nhận được không?',
+        answer: 'Có! Sau khi nhận hàng, bạn có thể đánh giá và để lại nhận xét về chất lượng món ăn. Điều này giúp cộng đồng MealsGo chọn được những món ngon nhất.'
+    }
+]
+
+// Modal content component
+function SupportModal({ isOpen, onClose, title, icon, children }: {
+    isOpen: boolean
+    onClose: () => void
+    title: string
+    icon: React.ReactNode
+    children: React.ReactNode
+}) {
+    if (!isOpen) return null
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+            {/* Modal */}
+            <div
+                className="relative bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-[modalIn_0.3s_ease-out]"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-600/20 rounded-xl flex items-center justify-center text-primary-500 border border-primary-500/30">
+                            {icon}
+                        </div>
+                        <h2 className="text-xl font-display font-bold text-white">{title}</h2>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all border border-slate-700"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)] custom-scrollbar">
+                    {children}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// FAQ Accordion item
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+    const [isOpen, setIsOpen] = useState(false)
+
+    return (
+        <div className="border border-slate-800 rounded-xl overflow-hidden transition-all hover:border-slate-700">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
+            >
+                <span className="text-sm font-medium text-slate-200 pr-4">{question}</span>
+                {isOpen
+                    ? <ChevronUp className="w-4 h-4 text-primary-500 flex-shrink-0" />
+                    : <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                }
+            </button>
+            {isOpen && (
+                <div className="px-4 pb-4 text-sm text-slate-400 leading-relaxed border-t border-slate-800/50 pt-3 animate-[fadeIn_0.2s_ease-out]">
+                    {answer}
+                </div>
+            )}
+        </div>
+    )
+}
 
 export default function Footer() {
+    const [activeModal, setActiveModal] = useState<'faq' | 'return' | 'terms' | null>(null)
+    const navigate = useNavigate()
+
+    const handleHomeClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        navigate('/')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
     return (
-        <footer className="bg-slate-950 text-white mt-auto border-t border-slate-900">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-left">
-                    {/* Brand Section */}
-                    <div className="space-y-6">
-                        <Link to="/" className="flex items-center space-x-3 group">
-                            <div className="bg-white p-2 rounded-xl group-hover:scale-110 transition-transform">
-                                <img src="/logo.svg" alt="MealGo Logo" className="w-8 h-8" />
+        <>
+            <footer className="bg-slate-950 text-white mt-auto border-t border-slate-900 font-sans">
+                <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-16">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-left">
+                        {/* Brand Section */}
+                        <div className="space-y-8">
+                            <Link to="/" className="flex items-center space-x-3 group">
+                                <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20 group-hover:bg-primary-500 transition-all">
+                                    <span className="font-display font-black text-xl">M</span>
+                                </div>
+                                <span className="text-2xl font-display font-bold tracking-tight">Meal<span className="text-primary-500">Go</span></span>
+                            </Link>
+                            <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-light">
+                                Hành trình khám phá hương vị đặc sắc từ ba miền Bắc - Trung - Nam, mang tinh hoa bếp Việt đến tận cửa nhà bạn.
+                            </p>
+                            <div className="flex space-x-5">
+                                <a href="https://www.facebook.com/profile.php?id=61576414005563" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-slate-900 rounded-xl hover:bg-primary-600 transition-all text-slate-400 hover:text-white border border-slate-800 hover:border-primary-500 hover:-translate-y-1 shadow-lg">
+                                    <Facebook className="w-5 h-5" />
+                                </a>
+                                <a href="https://www.instagram.com/_dxng.ntie/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-slate-900 rounded-xl hover:bg-primary-600 transition-all text-slate-400 hover:text-white border border-slate-800 hover:border-primary-500 hover:-translate-y-1 shadow-lg">
+                                    <Instagram className="w-5 h-5" />
+                                </a>
+                                <a href="https://www.youtube.com/@TienDung-uq1io" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-slate-900 rounded-xl hover:bg-primary-600 transition-all text-slate-400 hover:text-white border border-slate-800 hover:border-primary-500 hover:-translate-y-1 shadow-lg">
+                                    <Youtube className="w-5 h-5" />
+                                </a>
                             </div>
-                            <span className="text-2xl font-bold tracking-tight">MealGo</span>
-                        </Link>
-                        <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
-                            Hương vị của người Việt - Kết nối tinh hoa ẩm thực 3 miền, mang đặc sản vùng miền đến tận bàn ăn nhà bạn.
-                        </p>
-                        <div className="flex space-x-4">
-                            {/* Facebook SVG */}
-                            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-green-600 transition-colors text-slate-400 hover:text-white">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" /></svg>
-                            </a>
-                            {/* Instagram SVG */}
-                            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-green-600 transition-colors text-slate-400 hover:text-white">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4.162 4.162 0 110-8.324 4.162 4.162 0 010 8.324zM18.406 4.406a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z" /></svg>
-                            </a>
-                            {/* YouTube SVG */}
-                            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-green-600 transition-colors text-slate-400 hover:text-white">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
-                            </a>
+                        </div>
+
+                        {/* Quick Links */}
+                        <div>
+                            <h3 className="text-white font-display font-bold text-lg mb-8 relative inline-block">
+                                Liên kết nhanh
+                                <span className="absolute -bottom-2 left-0 w-8 h-1 bg-primary-600 rounded-full"></span>
+                            </h3>
+                            <ul className="space-y-4">
+                                <li>
+                                    <a href="/" onClick={handleHomeClick} className="text-slate-400 hover:text-primary-400 text-sm transition-colors flex items-center group">
+                                        <span className="w-0 group-hover:w-2 h-0.5 bg-primary-600 mr-0 group-hover:mr-2 transition-all rounded-full"></span>
+                                        Trang chủ
+                                    </a>
+                                </li>
+                                <li>
+                                    <Link to="/about" className="text-slate-400 hover:text-primary-400 text-sm transition-colors flex items-center group">
+                                        <span className="w-0 group-hover:w-2 h-0.5 bg-primary-600 mr-0 group-hover:mr-2 transition-all rounded-full"></span>
+                                        Giới thiệu
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/contact" className="text-slate-400 hover:text-primary-400 text-sm transition-colors flex items-center group">
+                                        <span className="w-0 group-hover:w-2 h-0.5 bg-primary-600 mr-0 group-hover:mr-2 transition-all rounded-full"></span>
+                                        Liên hệ
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Support */}
+                        <div>
+                            <h3 className="text-white font-display font-bold text-lg mb-8 relative inline-block">
+                                Hỗ trợ khách hàng
+                                <span className="absolute -bottom-2 left-0 w-8 h-1 bg-primary-600 rounded-full"></span>
+                            </h3>
+                            <ul className="space-y-4">
+                                <li>
+                                    <button onClick={() => setActiveModal('faq')} className="text-slate-400 hover:text-primary-400 text-sm transition-colors flex items-center group">
+                                        <span className="w-0 group-hover:w-2 h-0.5 bg-primary-600 mr-0 group-hover:mr-2 transition-all rounded-full"></span>
+                                        Câu hỏi thường gặp
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onClick={() => setActiveModal('return')} className="text-slate-400 hover:text-primary-400 text-sm transition-colors flex items-center group">
+                                        <span className="w-0 group-hover:w-2 h-0.5 bg-primary-600 mr-0 group-hover:mr-2 transition-all rounded-full"></span>
+                                        Chính sách đổi trả
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onClick={() => setActiveModal('terms')} className="text-slate-400 hover:text-primary-400 text-sm transition-colors flex items-center group">
+                                        <span className="w-0 group-hover:w-2 h-0.5 bg-primary-600 mr-0 group-hover:mr-2 transition-all rounded-full"></span>
+                                        Điều khoản dịch vụ
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Contact */}
+                        <div className="space-y-8">
+                            <h3 className="text-white font-display font-bold text-lg mb-8 relative inline-block">
+                                Thông tin liên hệ
+                                <span className="absolute -bottom-2 left-0 w-8 h-1 bg-primary-600 rounded-full"></span>
+                            </h3>
+                            <ul className="space-y-5">
+                                <li className="flex items-start space-x-4 group">
+                                    <div className="p-2 bg-slate-900 rounded-lg text-primary-500 group-hover:bg-primary-600 group-hover:text-white transition-all border border-slate-800">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Email hỗ trợ</p>
+                                        <p className="text-slate-300 text-sm font-medium">tiendung0629@gmail.com</p>
+                                    </div>
+                                </li>
+                                <li className="flex items-start space-x-4 group">
+                                    <div className="p-2 bg-slate-900 rounded-lg text-primary-500 group-hover:bg-primary-600 group-hover:text-white transition-all border border-slate-800">
+                                        <Phone className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Hotline</p>
+                                        <p className="text-slate-300 text-sm font-medium"> 0963 895 066</p>
+                                    </div>
+                                </li>
+                                <li className="flex items-start space-x-4 group">
+                                    <div className="p-2 bg-slate-900 rounded-lg text-primary-500 group-hover:bg-primary-600 group-hover:text-white transition-all border border-slate-800">
+                                        <Clock className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Giờ làm việc</p>
+                                        <p className="text-slate-300 text-sm font-medium">7:00 - 23:00 (Hằng ngày)</p>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
 
-                    {/* Quick Links */}
-                    <div>
-                        <h3 className="text-white font-semibold text-lg mb-6">Liên kết nhanh</h3>
-                        <ul className="space-y-4">
-                            <li>
-                                <Link to="/" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Trang chủ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/about" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Giới thiệu
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/contact" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Liên hệ
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Support */}
-                    <div>
-                        <h3 className="text-white font-semibold text-lg mb-6">Hỗ trợ khách hàng</h3>
-                        <ul className="space-y-4">
-                            <li>
-                                <a href="#" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Câu hỏi thường gặp
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Chính sách đổi trả
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Điều khoản dịch vụ
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-slate-400 hover:text-green-500 text-sm transition-colors block">
-                                    Bảo mật thông tin
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="space-y-6">
-                        <h3 className="text-white font-semibold text-lg mb-6">Thông tin liên hệ</h3>
-                        <ul className="space-y-4">
-                            <li className="flex items-start space-x-3 text-sm">
-                                <span className="text-green-500 mt-1">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                </span>
-                                <span className="text-slate-400 italic">Email: support@mealgo.vn</span>
-                            </li>
-                            <li className="flex items-start space-x-3 text-sm">
-                                <span className="text-green-500 mt-1">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                </span>
-                                <span className="text-slate-400">Hotline: 1800 6688</span>
-                            </li>
-                            <li className="flex items-start space-x-3 text-sm">
-                                <span className="text-green-500 mt-1">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </span>
-                                <span className="text-slate-400">Giờ làm việc: 7:00 - 23:00 (Hằng ngày)</span>
-                            </li>
-                        </ul>
+                    <div className="border-t border-slate-900 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-slate-500 text-[10px] sm:text-xs">
+                        <p className="font-light tracking-wide">&copy; 2026 MealsGo. Bản quyền thuộc về Kiên Dũng Vũ Kiên.</p>
+                        <div className="flex items-center space-x-8">
+                            <div className="flex space-x-6">
+                                <a href="#" className="hover:text-primary-400 transition-colors uppercase font-bold tracking-widest">Tiếng Việt</a>
+                                <a href="#" className="hover:text-primary-400 transition-colors uppercase font-bold tracking-widest">English</a>
+                            </div>
+                            <div className="w-px h-4 bg-slate-800 hidden md:block"></div>
+                            <div className="flex space-x-6">
+                                <a href="#" className="hover:text-slate-300 transition-colors">Privacy</a>
+                                <a href="#" className="hover:text-slate-300 transition-colors">Terms</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </footer>
 
-                <div className="border-t border-slate-900 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-slate-500 text-xs">
-                    <p>&copy; 2026 MealGo. Bản quyền thuộc về Công ty TNHH Đặc Sản Việt.</p>
-                    <div className="flex space-x-6">
-                        <a href="#" className="hover:text-white transition-colors">Vietnamese</a>
-                        <a href="#" className="hover:text-white transition-colors">English</a>
+            {/* FAQ Modal */}
+            <SupportModal
+                isOpen={activeModal === 'faq'}
+                onClose={() => setActiveModal(null)}
+                title="Câu hỏi thường gặp"
+                icon={<HelpCircle className="w-5 h-5" />}
+            >
+                <div className="space-y-3">
+                    {faqItems.map((item, index) => (
+                        <FaqItem key={index} question={item.question} answer={item.answer} />
+                    ))}
+                </div>
+            </SupportModal>
+
+            {/* Return Policy Modal */}
+            <SupportModal
+                isOpen={activeModal === 'return'}
+                onClose={() => setActiveModal(null)}
+                title="Chính sách đổi trả"
+                icon={<RotateCcw className="w-5 h-5" />}
+            >
+                <div className="space-y-6 text-sm text-slate-300 leading-relaxed">
+                    <div className="p-4 bg-primary-600/10 border border-primary-500/20 rounded-xl">
+                        <p className="text-primary-400 font-semibold mb-1">Cam kết của MealsGo</p>
+                        <p className="text-slate-400">Chúng tôi luôn đặt quyền lợi khách hàng lên hàng đầu. Nếu có bất kỳ vấn đề nào về đơn hàng, chúng tôi sẵn sàng hỗ trợ bạn.</p>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
+                            Trường hợp được đổi trả & hoàn tiền
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-4">
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-500 mt-0.5">✓</span>
+                                <span>Món ăn bị giao sai so với đơn đặt hàng</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-500 mt-0.5">✓</span>
+                                <span>Thực phẩm bị hư hỏng, ôi thiu do lỗi từ bếp hoặc shop</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-500 mt-0.5">✓</span>
+                                <span>Thiếu món trong đơn hàng do lỗi từ nhà hàng</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-500 mt-0.5">✓</span>
+                                <span>Chất lượng món ăn không đảm bảo vệ sinh an toàn thực phẩm</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-500 mt-0.5">✓</span>
+                                <span>Đơn hàng bị hư hại do quá trình đóng gói hoặc vận chuyển từ phía shop</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            Trường hợp KHÔNG được đổi trả
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-4">
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5">✗</span>
+                                <span>Khách hàng đổi ý sau khi đã nhận hàng mà sản phẩm không bị lỗi</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5">✗</span>
+                                <span>Sản phẩm bị hư hỏng do lỗi bảo quản của khách hàng</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-red-500 mt-0.5">✗</span>
+                                <span>Yêu cầu đổi trả sau 2 giờ kể từ khi nhận hàng</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                        <h4 className="text-white font-semibold mb-2">Quy trình đổi trả</h4>
+                        <ol className="space-y-1.5 text-slate-400 list-decimal list-inside">
+                            <li>Liên hệ hotline <span className="text-primary-400 font-medium">0963 895 066</span> hoặc email trong vòng 2 giờ sau khi nhận hàng</li>
+                            <li>Cung cấp hình ảnh/video làm bằng chứng</li>
+                            <li>Chúng tôi xác minh và xử lý trong vòng 24 giờ</li>
+                            <li>Hoàn tiền qua phương thức thanh toán ban đầu hoặc đổi món mới</li>
+                        </ol>
                     </div>
                 </div>
-            </div>
-        </footer>
+            </SupportModal>
+
+            {/* Terms of Service Modal */}
+            <SupportModal
+                isOpen={activeModal === 'terms'}
+                onClose={() => setActiveModal(null)}
+                title="Điều khoản dịch vụ"
+                icon={<ShieldCheck className="w-5 h-5" />}
+            >
+                <div className="space-y-6 text-sm text-slate-300 leading-relaxed">
+                    <div className="p-4 bg-primary-600/10 border border-primary-500/20 rounded-xl">
+                        <p className="text-slate-400">Bằng việc sử dụng dịch vụ MealsGo, bạn đồng ý tuân thủ các điều khoản dưới đây. Các điều khoản này được xây dựng phù hợp với quy định pháp luật Việt Nam.</p>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-500 text-xs font-bold border border-primary-500/30">1</span>
+                            Điều kiện sử dụng
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-9">
+                            <li>• Người dùng phải từ 16 tuổi trở lên để đăng ký tài khoản</li>
+                            <li>• Thông tin đăng ký phải chính xác và trung thực</li>
+                            <li>• Mỗi cá nhân chỉ được sở hữu một tài khoản MealsGo</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-500 text-xs font-bold border border-primary-500/30">2</span>
+                            Quyền và trách nhiệm của người dùng
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-9">
+                            <li>• Được bảo vệ thông tin cá nhân theo Luật An ninh mạng Việt Nam</li>
+                            <li>• Có quyền khiếu nại khi chất lượng dịch vụ không đảm bảo</li>
+                            <li>• Không sử dụng nền tảng cho mục đích vi phạm pháp luật</li>
+                            <li>• Chịu trách nhiệm về mọi hoạt động trên tài khoản của mình</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-500 text-xs font-bold border border-primary-500/30">3</span>
+                            Quy định về đối tác bán hàng
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-9">
+                            <li>• Phải có giấy phép kinh doanh và chứng nhận vệ sinh an toàn thực phẩm</li>
+                            <li>• Tuân thủ quy định về an toàn thực phẩm của Bộ Y tế</li>
+                            <li>• Đảm bảo chất lượng món ăn và thời gian chuẩn bị</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-500 text-xs font-bold border border-primary-500/30">4</span>
+                            Bảo mật thông tin
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-9">
+                            <li>• Tuân thủ Luật An ninh mạng 2018 và Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân</li>
+                            <li>• Không chia sẻ thông tin khách hàng cho bên thứ ba khi chưa có sự đồng ý</li>
+                            <li>• Áp dụng các biện pháp bảo mật theo tiêu chuẩn quốc tế</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-500 text-xs font-bold border border-primary-500/30">5</span>
+                            Giải quyết tranh chấp
+                        </h4>
+                        <ul className="space-y-2 text-slate-400 ml-9">
+                            <li>• Ưu tiên giải quyết thông qua thương lượng và hòa giải</li>
+                            <li>• Tuân thủ Luật Bảo vệ quyền lợi người tiêu dùng 2023</li>
+                            <li>• Trường hợp không thể hòa giải sẽ giải quyết tại Tòa án nhân dân có thẩm quyền</li>
+                        </ul>
+                    </div>
+
+                    <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 text-slate-500 text-xs">
+                        <p>Điều khoản có hiệu lực từ ngày 01/01/2026. MealsGo có quyền cập nhật điều khoản và sẽ thông báo trước 30 ngày qua email đã đăng ký.</p>
+                    </div>
+                </div>
+            </SupportModal>
+
+            {/* Custom animations */}
+            <style>{`
+                @keyframes modalIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.95) translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-4px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(148, 163, 184, 0.2);
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(148, 163, 184, 0.4);
+                }
+            `}</style>
+        </>
     )
 }

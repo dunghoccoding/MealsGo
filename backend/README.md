@@ -1,4 +1,4 @@
-# Đặc Sản Việt Nam - Backend
+#MealsGo - Backend
 
 Backend cho hệ thống đặt món ăn đặc sản Việt Nam 3 miền.
 

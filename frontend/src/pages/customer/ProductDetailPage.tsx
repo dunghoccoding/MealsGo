@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useGetProductByIdQuery } from '../../features/products/productApi'
 import { useAddToCartMutation } from '../../features/cart/cartApi'
 import { useAppSelector } from '../../app/hooks'
 import { selectIsAuthenticated } from '../../features/auth/authSlice'
 import type { SelectedVariant } from '../../features/cart/cartApi'
+import { Store, Star, ShoppingCart, Minus, Plus, ArrowLeft, Loader2, ChevronRight, AlertCircle, Utensils } from 'lucide-react'
 
 export default function ProductDetailPage() {
     const { id } = useParams<{ id: string }>()
@@ -19,19 +20,27 @@ export default function ProductDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-                <p className="mt-4 text-gray-600">Đang tải thông tin sản phẩm...</p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-12 h-12 text-primary-600 animate-spin mb-4" />
+                <p className="text-slate-500 font-medium">Đang tải hương vị tinh tế...</p>
             </div>
         )
     }
 
     if (error || !product) {
         return (
-            <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-                <p className="text-red-600 text-xl">❌ Không tìm thấy sản phẩm</p>
-                <button onClick={() => navigate('/')} className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-green-700">
-                    ← Về trang chủ
+            <div className="max-w-7xl mx-auto px-6 py-20 text-center">
+                <div className="mb-6 bg-rose-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto text-rose-500">
+                    <AlertCircle className="w-10 h-10" />
+                </div>
+                <h2 className="text-2xl font-display font-bold text-slate-800 mb-2">Không tìm thấy sản phẩm</h2>
+                <p className="text-slate-500 mb-8">Món ăn này có lẽ đã hết hoặc không còn tồn tại.</p>
+                <button 
+                    onClick={() => navigate('/')} 
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Quay lại trang chủ
                 </button>
             </div>
         )
@@ -82,41 +91,57 @@ export default function ProductDetailPage() {
 
     const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 
-    const regionLabels: Record<string, string> = { NORTH: '🔴 Miền Bắc', CENTRAL: '🟡 Miền Trung', SOUTH: '🟢 Miền Nam' }
+    const regionColors: Record<string, string> = { 
+        NORTH: 'bg-rose-50 text-rose-700 border-rose-100', 
+        CENTRAL: 'bg-amber-50 text-amber-700 border-amber-100', 
+        SOUTH: 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+    }
+    const regionNames: Record<string, string> = { NORTH: 'Miền Bắc', CENTRAL: 'Miền Trung', SOUTH: 'Miền Nam' }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
             {/* Breadcrumb */}
-            <nav className="mb-6 text-sm text-gray-500">
-                <button onClick={() => navigate('/')} className="hover:text-primary">Trang chủ</button>
-                <span className="mx-2">/</span>
-                <span className="text-gray-800 font-medium">{product.name}</span>
+            <nav className="mb-8 flex items-center gap-2 text-sm font-medium text-slate-400">
+                <button onClick={() => navigate('/')} className="hover:text-primary-600 transition-colors">Trang chủ</button>
+                <ChevronRight className="w-4 h-4" />
+                <span className="text-slate-800 font-bold">{product.name}</span>
             </nav>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Images */}
-                <div>
-                    <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-4 shadow-lg">
+                <div className="space-y-4">
+                    <div className="aspect-[4/5] bg-slate-100 rounded-3xl overflow-hidden shadow-premium group relative">
                         {product.images && product.images.length > 0 ? (
                             <img
                                 src={product.images[activeImage]}
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             />
                         ) : (
-                            <div className="flex items-center justify-center h-full text-8xl">🍜</div>
+                            <div className="flex flex-col items-center justify-center h-full text-slate-300">
+                                <Utensils className="w-20 h-20 mb-4 opacity-20" />
+                                <span className="font-medium">Chưa có hình ảnh</span>
+                            </div>
                         )}
+                        <div className="absolute top-4 left-4">
+                            <span className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest shadow-sm backdrop-blur-md ${regionColors[product.region]}`}>
+                                {regionNames[product.region] || product.region}
+                            </span>
+                        </div>
                     </div>
                     {product.images && product.images.length > 1 && (
-                        <div className="flex gap-2 overflow-x-auto">
+                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200">
                             {product.images.map((img, i) => (
                                 <button
                                     key={i}
                                     onClick={() => setActiveImage(i)}
-                                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${i === activeImage ? 'border-primary shadow-md' : 'border-gray-200'
+                                    className={`w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 relative ${i === activeImage 
+                                        ? 'border-primary-600 shadow-md ring-2 ring-primary-100' 
+                                        : 'border-transparent hover:border-slate-200'
                                         }`}
                                 >
                                     <img src={img} alt="" className="w-full h-full object-cover" />
+                                    {i !== activeImage && <div className="absolute inset-0 bg-white/20"></div>}
                                 </button>
                             ))}
                         </div>
@@ -124,73 +149,85 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Product Info */}
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">
-                            {regionLabels[product.region] || product.region}
-                        </span>
+                <div className="lg:pl-6">
+                    <div className="flex items-center gap-3 mb-4">
                         {product.featured && (
-                            <span className="text-sm px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">⭐ Nổi bật</span>
+                            <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-500 text-white rounded-full font-bold uppercase tracking-wider shadow-sm shadow-amber-500/20">
+                                <Star className="w-3 h-3 fill-current" />
+                                Nổi bật
+                            </span>
                         )}
                     </div>
 
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                    <p className="text-gray-500 mb-4">🏪 {product.vendorName}</p>
+                    <h1 className="text-4xl md:text-5xl font-display font-black text-slate-900 mb-3 tracking-tight">{product.name}</h1>
+                    <Link to={`/vendor/${product.vendorId || ''}`} className="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors font-medium mb-6">
+                        <Store className="w-4 h-4" />
+                        <span>{product.vendorName}</span>
+                    </Link>
 
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-6 mb-8 py-4 border-y border-slate-100">
                         <div className="flex items-center">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <svg
-                                    key={star}
-                                    className={`w-5 h-5 ${star <= Math.round(product.rating || 0)
-                                        ? 'text-amber-400 fill-current'
-                                        : 'text-gray-300 fill-current'
-                                        }`}
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                                </svg>
-                            ))}
-                            <span className="ml-2 text-gray-600 font-medium">
-                                {product.rating && product.rating > 0 ? `(${product.reviewCount} đánh giá)` : '(Chưa có đánh giá)'}
+                            <div className="flex items-center gap-0.5 mr-3">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                        key={star}
+                                        className={`w-4 h-4 ${star <= Math.round(product.rating || 0)
+                                            ? 'text-amber-400 fill-current'
+                                            : 'text-slate-200 fill-current'
+                                            }`}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-slate-900 font-bold text-sm">
+                                {product.rating?.toFixed(1) || '0.0'}
+                            </span>
+                            <span className="ml-1 text-slate-400 text-sm">
+                                ({product.reviewCount} đánh giá)
                             </span>
                         </div>
-                        {product.soldCount > 0 && (
-                            <span className="text-gray-400">|</span>
-                        )}
-                        {product.soldCount > 0 && (
-                            <span className="text-gray-500 font-medium">Đã bán: {product.soldCount}</span>
-                        )}
+                        <div className="h-4 w-px bg-slate-200"></div>
+                        <div className="text-sm">
+                            <span className="text-slate-400">Đã bán:</span>
+                            <span className="ml-1 text-slate-900 font-bold">{product.soldCount}</span>
+                        </div>
                     </div>
 
-                    <div className="text-3xl font-bold text-primary mb-6">
+                    <div className="text-4xl font-display font-black text-primary-600 mb-8 tracking-tight">
                         {formatPrice(product.basePrice)}
                     </div>
 
-                    <p className="text-gray-700 mb-6 leading-relaxed">{product.description}</p>
+                    <div className="prose prose-slate mb-10">
+                        <p className="text-slate-600 leading-relaxed font-light text-lg">{product.description}</p>
+                    </div>
 
                     {/* Variant Groups */}
                     {product.variantGroups && product.variantGroups.length > 0 && (
-                        <div className="space-y-4 mb-6">
+                        <div className="space-y-6 mb-10">
                             {product.variantGroups.map(group => (
-                                <div key={group.id} className="border rounded-xl p-4 bg-gray-50">
-                                    <p className="font-semibold text-gray-800 mb-3">
-                                        {group.name}
-                                        {group.isRequired && <span className="text-red-500 ml-1">*</span>}
-                                    </p>
+                                <div key={group.id} className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="font-display font-bold text-slate-800 tracking-tight">
+                                            {group.name}
+                                        </p>
+                                        {group.isRequired && (
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
+                                                Bắt buộc
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex flex-wrap gap-2">
                                         {group.variants.map(variant => (
                                             <button
                                                 key={variant.id}
                                                 onClick={() => handleVariantSelect(group.id, group.name, variant.id, variant.name, variant.priceAdjustment)}
-                                                className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${selectedVariants[group.id]?.variantId === variant.id
-                                                    ? 'border-primary bg-green-50 text-primary'
-                                                    : 'border-gray-200 hover:border-gray-400 text-gray-700'
+                                                className={`px-5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all shadow-sm ${selectedVariants[group.id]?.variantId === variant.id
+                                                    ? 'border-primary-600 bg-primary-600 text-white shadow-primary-600/20'
+                                                    : 'border-white bg-white hover:border-slate-200 text-slate-600'
                                                     }`}
                                             >
-                                                {variant.name}
+                                                <span>{variant.name}</span>
                                                 {variant.priceAdjustment > 0 && (
-                                                    <span className="text-xs ml-1 text-gray-500">
+                                                    <span className={`ml-2 text-xs opacity-60`}>
                                                         +{formatPrice(variant.priceAdjustment)}
                                                     </span>
                                                 )}
@@ -203,36 +240,50 @@ export default function ProductDetailPage() {
                     )}
 
                     {/* Quantity */}
-                    <div className="flex items-center gap-4 mb-6">
-                        <span className="font-semibold text-gray-700">Số lượng:</span>
-                        <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between mb-8 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm">
+                        <span className="font-display font-bold text-slate-800">Số lượng</span>
+                        <div className="flex items-center bg-slate-100 rounded-xl p-1">
                             <button
                                 onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-lg font-bold"
-                            >−</button>
-                            <span className="px-6 py-2 text-lg font-semibold min-w-[60px] text-center">{quantity}</span>
+                                className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-600"
+                            >
+                                <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="px-6 text-lg font-display font-black min-w-[50px] text-center text-slate-800">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(q => q + 1)}
-                                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-lg font-bold"
-                            >+</button>
+                                className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-600"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
 
-                    {/* Total & Add to Cart */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6">
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-700 font-medium">Tổng tiền:</span>
-                            <span className="text-2xl font-bold text-primary">{formatPrice(totalPrice())}</span>
+                    {/* Summary & ATC */}
+                    <div className="space-y-4">
+                        <div className="bg-emerald-600 rounded-3xl p-8 mb-4 shadow-xl shadow-emerald-500/20 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+                            <div className="relative z-10 flex justify-between items-center">
+                                <span className="text-emerald-100 font-medium">Tổng thanh toán:</span>
+                                <span className="text-3xl font-display font-black text-white tracking-tight">{formatPrice(totalPrice())}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={isAdding}
-                        className="w-full py-4 bg-primary text-white text-lg font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
-                    >
-                        {isAdding ? 'Đang thêm...' : '🛒 Thêm vào giỏ hàng'}
-                    </button>
+                        <button
+                            onClick={handleAddToCart}
+                            disabled={isAdding}
+                            className="w-full py-5 bg-primary-950 text-white rounded-2xl font-display font-bold text-xl hover:bg-black transition-all shadow-premium-hover flex items-center justify-center gap-3 disabled:opacity-50 group active:scale-95"
+                        >
+                            {isAdding ? (
+                                <Loader2 className="w-6 h-6 animate-spin" />
+                            ) : (
+                                <>
+                                    <ShoppingCart className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                    <span>Thêm vào giỏ hàng</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
