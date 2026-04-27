@@ -11,6 +11,8 @@ import com.dacsan.repository.*;
 import com.dacsan.security.SecurityUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,11 +36,12 @@ public class OrderService {
         private final CartRepository cartRepository;
         private final CartItemRepository cartItemRepository;
         private final VendorRepository vendorRepository;
+        private final VNPayService vnPayService;
         private final ObjectMapper objectMapper;
         private final NotificationService notificationService; // WebSocket notifications
 
         @Transactional
-        public OrderResponse createOrder(CreateOrderRequest request) {
+        public OrderResponse createOrder(CreateOrderRequest request, HttpServletRequest httpRequest) {
                 User currentUser = SecurityUtils.getCurrentUser();
 
                 // 1. Get user's cart
@@ -169,6 +172,14 @@ public class OrderService {
 
                 // 9. Return response with sub-orders
                 log.info("Order {} creation complete, returning response", order.getOrderNumber());
+
+                if (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
+                        String paymentUrl = vnPayService.createPaymentUrl(order, httpRequest);
+                        OrderResponse response = buildOrderResponse(order, subOrders);
+                        response.setPaymentUrl(paymentUrl);
+                        return response;
+                }
+
                 return buildOrderResponse(order, subOrders);
         }
 

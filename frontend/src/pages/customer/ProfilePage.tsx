@@ -263,6 +263,9 @@ export default function ProfilePage() {
                                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}>
                                                 {statusInfo.label}
                                             </span>
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium`}>
+                                                {order.paymentMethod}
+                                            </span>
                                         </div>
                                         <div className="p-4">
                                             {order.subOrders.map(sub => (
