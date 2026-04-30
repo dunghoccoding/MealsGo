@@ -141,8 +141,9 @@ public class OrderService {
 
                 log.info("Created {} sub-orders for order {}", subOrders.size(), orderNumber);
 
-                // 7. Clear cart
-                cartItemRepository.deleteAll(cart.getItems());
+                // 7. Clear cart - use orphanRemoval mechanism
+                cart.getItems().clear();
+                cartRepository.save(cart);
                 log.info("Cleared cart for user {}", currentUser.getId());
 
                 // 8. Send WebSocket notifications to vendors

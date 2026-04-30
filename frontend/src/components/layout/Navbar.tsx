@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../app/hooks'
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../features/auth/authSlice'
 import { useGetCartQuery } from '../../features/cart/cartApi'
+import api from '../../app/api'
 import { useState } from 'react'
 import { Search, ShoppingCart, User, Store, Settings, Package, LogOut, ChevronDown } from 'lucide-react'
 
@@ -16,6 +17,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         dispatch(logout())
+        dispatch(api.util.resetApiState())
         setShowUserMenu(false)
     }
 

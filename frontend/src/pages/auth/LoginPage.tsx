@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useLoginMutation } from '../../features/auth/authApi'
 import { useAppDispatch } from '../../app/hooks'
 import { setCredentials } from '../../features/auth/authSlice'
+import api from '../../app/api'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
@@ -33,6 +34,7 @@ export default function LoginPage() {
         try {
             const result = await login(data).unwrap()
             dispatch(setCredentials(result))
+            dispatch(api.util.resetApiState())
             toast.success('Đăng nhập thành công!')
 
             if (result.role === 'VENDOR') {

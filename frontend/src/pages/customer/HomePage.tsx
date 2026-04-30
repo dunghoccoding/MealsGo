@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useGetProductsQuery } from '../../features/products/productApi'
 import ProductCard from '../../components/product/ProductCard'
+import RecommendationSection from '../../components/product/RecommendationSection'
+import { useAppSelector } from '../../app/hooks'
+import { selectIsAuthenticated } from '../../features/auth/authSlice'
 import { LayoutGrid, MapPin, Loader2, AlertCircle } from 'lucide-react'
 
 export default function HomePage() {
     const [selectedRegion, setSelectedRegion] = useState<string>('')
     const [searchParams] = useSearchParams()
     const searchQuery = searchParams.get('search') || ''
+    const isAuthenticated = useAppSelector(selectIsAuthenticated)
 
     const { data, isLoading, error } = useGetProductsQuery({
         region: selectedRegion || undefined,
@@ -79,8 +83,26 @@ export default function HomePage() {
                 </div>
             </div>
 
+            {/* Personalized Recommendations */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+                <RecommendationSection
+                    type="personalized"
+                    title={isAuthenticated ? 'Gợi ý cho bạn' : 'Món bán chạy'}
+                />
+            </div>
+
             {/* Products Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Section Title */}
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg">
+                        <LayoutGrid className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-display font-black text-slate-800 tracking-tight">Tất cả món</h2>
+                        <p className="text-sm text-slate-400 font-medium">Khám phá toàn bộ thực đơn đặc sản</p>
+                    </div>
+                </div>
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 className="w-12 h-12 text-primary-600 animate-spin mb-4" />

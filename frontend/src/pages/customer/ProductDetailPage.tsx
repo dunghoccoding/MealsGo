@@ -7,6 +7,7 @@ import { useAppSelector } from '../../app/hooks'
 import { selectIsAuthenticated } from '../../features/auth/authSlice'
 import type { SelectedVariant } from '../../features/cart/cartApi'
 import { Store, Star, ShoppingCart, Minus, Plus, ArrowLeft, Loader2, ChevronRight, AlertCircle, Utensils } from 'lucide-react'
+import RecommendationSection from '../../components/product/RecommendationSection'
 
 export default function ProductDetailPage() {
     const { id } = useParams<{ id: string }>()
@@ -286,6 +287,9 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Related Products */}
+            <RecommendationSection type="related" productId={Number(id)} />
         </div>
     )
 }
