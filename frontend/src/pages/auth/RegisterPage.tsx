@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useRegisterMutation, type RegisterRequest } from '../../features/auth/authApi'
 import { useAppDispatch } from '../../app/hooks'
 import { setCredentials } from '../../features/auth/authSlice'
+import api from '../../app/api'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { User, Mail, Lock, Phone, Store, MapPin, Loader2, ArrowRight, UserCircle, ShoppingBag } from 'lucide-react'
@@ -80,6 +81,7 @@ export default function RegisterPage() {
             }
             const result = await registerUser(registerData).unwrap()
             dispatch(setCredentials(result))
+            dispatch(api.util.resetApiState())
             toast.success('Đăng ký thành công!')
 
             if (result.role === 'VENDOR') {

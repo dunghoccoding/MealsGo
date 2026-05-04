@@ -49,6 +49,7 @@ export const cartApi = api.injectEndpoints({
         getCart: builder.query<CartResponse, void>({
             query: () => '/cart',
             providesTags: ['Cart'],
+            keepUnusedDataFor: 0,
         }),
         addToCart: builder.mutation<CartItem, AddToCartRequest>({
             query: (body) => ({
