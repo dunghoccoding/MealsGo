@@ -107,12 +107,6 @@ export default function VendorDashboardPage() {
                     if (next[id] > 0) {
                         next[id] -= 1
                         changed = true
-
-                        // When countdown hits 0, auto-switch to DELIVERING
-                        if (next[id] === 0) {
-                            handleUpdateStatus(id, 'PICKED_UP')
-                            delete next[id] // Cleanup
-                        }
                     }
                 })
 
@@ -121,29 +115,20 @@ export default function VendorDashboardPage() {
         }, 1000)
 
         return () => clearInterval(timer)
-    }, []) // Empty dependency array means this runs once on mount, but updating state inside interval closure issues?
-    // Actually, set state with callback (prev => ...) is safe in interval. 
-    // BUT `handleUpdateStatus` inside `setInterval` might capture stale closure if not careful.
-    // However, `handleUpdateStatus` uses `updateSubOrderStatus` hook which is stable?
-    // Actually, calling an async function inside the state setter or interval is tricky.
-    // Better approach: Separate effect for hitting 0, or just call it.
+    }, [])
 
-    // Correct approach for side-effect on 0:
     useEffect(() => {
         Object.entries(countdowns).forEach(([idStr, seconds]) => {
             const id = Number(idStr)
             if (seconds === 0) {
-                // Trigger auto-update
-                // We need to remove it from state so it doesn't trigger again
                 setCountdowns(prev => {
                     const next = { ...prev }
                     delete next[id]
                     return next
                 })
-                // Call API
-                updateSubOrderStatus({ subOrderId: id, status: 'PICKED_UP' as any })
+                updateSubOrderStatus({ subOrderId: id, status: 'READY' as any })
                     .unwrap()
-                    .then(() => toast.success(`Đơn #${id} đã tự động chuyển sang Chờ Giao (PICKED UP)`))
+                    .then(() => toast.success(`Đơn #${id} đã tự động chuyển sang Sẵn sàng`))
                     .catch(() => toast.error(`Lỗi tự động cập nhật đơn #${id}`))
             }
         })
@@ -549,7 +534,7 @@ export default function VendorDashboardPage() {
 
                                                         {/* If somehow stuck in READY */}
                                                         {sub.status === 'READY' && (
-                                                            <button onClick={() => handleUpdateStatus(sub.id, 'DELIVERING')} disabled={updatingStatus} className="px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded hover:bg-purple-700 transition-colors disabled:opacity-50">Giao hàng</button>
+                                                            <button onClick={() => handleUpdateStatus(sub.id, 'PICKED_UP')} disabled={updatingStatus} className="px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded hover:bg-purple-700 transition-colors disabled:opacity-50">Giao hàng</button>
                                                         )}
 
                                                         {sub.status === 'PICKED_UP' && (
