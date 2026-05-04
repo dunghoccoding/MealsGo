@@ -1,2 +1,0 @@
-# MealsGo
-An individual project 
