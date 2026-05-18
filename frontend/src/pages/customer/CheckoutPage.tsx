@@ -13,7 +13,15 @@ export default function CheckoutPage() {
     const [createOrder, { isLoading: ordering }] = useCreateOrderMutation()
 
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null)
-    const [paymentMethod, setPaymentMethod] = useState<'COD' | 'BANK_TRANSFER'>('COD')
+    const [paymentMethod, setPaymentMethod] = useState<
+        'COD' | 'VNPAY' | 'MOMO_QR' | 'MOMO_ATM'
+    >('COD')
+
+    const isMomo =
+        paymentMethod === 'MOMO_QR' ||
+        paymentMethod === 'MOMO_ATM'
+
+
     const [notes, setNotes] = useState('')
     const [showNewAddr, setShowNewAddr] = useState(false)
     const [addrForm, setAddrForm] = useState({
@@ -56,9 +64,15 @@ export default function CheckoutPage() {
                 notes: notes || undefined,
             }).unwrap()
 
-            if (paymentMethod === 'BANK_TRANSFER' && order.paymentUrl) {
-                window.location.href = order.paymentUrl
-                return
+            if (
+                paymentMethod === 'VNPAY' ||
+                paymentMethod === 'MOMO_QR' ||
+                paymentMethod === 'MOMO_ATM'
+            ) {
+                if (order.paymentUrl) {
+                    window.location.href = order.paymentUrl
+                    return
+                }
             }
 
             toast.success(`Đặt hàng thành công! Đơn #${order.orderNumber}`)
@@ -152,19 +166,102 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Payment */}
+                    {/* Payment */}
                     <div className="bg-white border rounded-xl p-6 shadow-sm">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">💳 Phương thức thanh toán</h2>
-                        <div className="space-y-2">
-                            <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-primary bg-green-50' : 'border-gray-200'
-                                }`}>
-                                <input type="radio" name="payment" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} className="text-primary" />
-                                <span className="font-medium">💵 Thanh toán khi nhận hàng (COD)</span>
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">
+                            💳 Phương thức thanh toán
+                        </h2>
+
+                        <div className="space-y-3">
+
+                            {/* COD */}
+                            <label
+                                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'COD'
+                                    ? 'border-primary bg-green-50'
+                                    : 'border-gray-200'
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    checked={paymentMethod === 'COD'}
+                                    onChange={() => setPaymentMethod('COD')}
+                                    className="text-primary"
+                                />
+
+                                <span className="font-medium">
+                                    💵 Thanh toán khi nhận hàng (COD)
+                                </span>
                             </label>
-                            <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'BANK_TRANSFER' ? 'border-primary bg-green-50' : 'border-gray-200'
-                                }`}>
-                                <input type="radio" name="payment" checked={paymentMethod === 'BANK_TRANSFER'} onChange={() => setPaymentMethod('BANK_TRANSFER')} className="text-primary" />
-                                <span className="font-medium">🏦 Chuyển khoản ngân hàng</span>
+
+                            {/* VNPAY */}
+                            <label
+                                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'VNPAY'
+                                    ? 'border-primary bg-green-50'
+                                    : 'border-gray-200'
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    checked={paymentMethod === 'VNPAY'}
+                                    onChange={() => setPaymentMethod('VNPAY')}
+                                    className="text-primary"
+                                />
+
+                                <span className="font-medium">
+                                    VNPay
+                                </span>
                             </label>
+
+                            {/* MOMO */}
+                            <div
+                                className={`rounded-lg border transition-all ${isMomo
+                                    ? 'border-primary bg-green-50'
+                                    : 'border-gray-200'
+                                    }`}
+                            >
+                                <div className="p-3 flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        name="payment-parent"
+                                        checked={isMomo}
+                                        onChange={() => setPaymentMethod('MOMO_QR')}
+                                        className="text-primary"
+                                    />
+
+                                    <span className="font-medium">
+                                        MoMo
+                                    </span>
+                                </div>
+
+                                {isMomo && (
+                                    <div className="px-10 pb-3 space-y-2">
+
+                                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="momo-type"
+                                                checked={paymentMethod === 'MOMO_QR'}
+                                                onChange={() => setPaymentMethod('MOMO_QR')}
+                                            />
+
+                                            <span>QR Code</span>
+                                        </label>
+
+                                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="momo-type"
+                                                checked={paymentMethod === 'MOMO_ATM'}
+                                                onChange={() => setPaymentMethod('MOMO_ATM')}
+                                            />
+
+                                            <span>ATM Nội địa</span>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
