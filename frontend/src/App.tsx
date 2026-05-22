@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/customer/HomePage'
 import ProductDetailPage from './pages/customer/ProductDetailPage'
@@ -25,6 +26,7 @@ function App() {
         {/* Auth pages without layout */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Main app with layout */}
         <Route element={<MainLayout />}>

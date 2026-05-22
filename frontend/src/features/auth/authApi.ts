@@ -45,7 +45,37 @@ export const authApi = api.injectEndpoints({
             }),
             invalidatesTags: ['User'],
         }),
+        forgotPassword: builder.mutation<{ message: string }, { email: string }>({
+            query: (body) => ({
+                url: '/auth/forgot-password',
+                method: 'POST',
+                body,
+            }),
+        }),
+        verifyOtp: builder.mutation<{ resetToken: string }, { email: string; otp: string }>({
+            query: (body) => ({
+                url: '/auth/verify-otp',
+                method: 'POST',
+                body,
+            }),
+        }),
+        resetPassword: builder.mutation<
+            { message: string },
+            { resetToken: string; newPassword: string; confirmPassword: string }
+        >({
+            query: (body) => ({
+                url: '/auth/reset-password',
+                method: 'POST',
+                body,
+            }),
+        }),
     }),
 })
 
-export const { useLoginMutation, useRegisterMutation } = authApi
+export const {
+    useLoginMutation,
+    useRegisterMutation,
+    useForgotPasswordMutation,
+    useVerifyOtpMutation,
+    useResetPasswordMutation,
+} = authApi

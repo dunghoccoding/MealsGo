@@ -4,9 +4,10 @@ import { useAppSelector } from '../../app/hooks'
 import { selectCurrentUser } from '../../features/auth/authSlice'
 import { useGetAddressesQuery, useCreateAddressMutation, useDeleteAddressMutation, useSetDefaultAddressMutation } from '../../features/addresses/addressApi'
 import { useGetOrdersQuery } from '../../features/orders/orderApi'
+import { useChangePasswordMutation } from '../../features/user/userApi'
 import { toast } from 'sonner'
 
-type Tab = 'profile' | 'addresses' | 'orders'
+type Tab = 'profile' | 'addresses' | 'orders' | 'security'
 
 export default function ProfilePage() {
     const [searchParams] = useSearchParams()
@@ -18,12 +19,45 @@ export default function ProfilePage() {
     const [createAddress, { isLoading: creating }] = useCreateAddressMutation()
     const [deleteAddress] = useDeleteAddressMutation()
     const [setDefault] = useSetDefaultAddressMutation()
+    const [changePassword, { isLoading: changingPwd }] = useChangePasswordMutation()
     const [showAddressForm, setShowAddressForm] = useState(false)
     const [addrForm, setAddrForm] = useState({
         recipientName: '', recipientPhone: '', addressLine: '', ward: '', district: '', city: '', label: 'HOME'
     })
+    const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    const [showPwd, setShowPwd] = useState({ current: false, newPwd: false, confirm: false })
 
     const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
+
+    const getPasswordStrength = (pwd: string): { label: string; color: string; width: string } => {
+        if (pwd.length === 0) return { label: '', color: '', width: '0%' }
+        if (pwd.length < 6) return { label: 'Yếu', color: 'bg-red-500', width: '25%' }
+        if (pwd.length < 10 && !/[A-Z]/.test(pwd)) return { label: 'Trung bình', color: 'bg-yellow-500', width: '50%' }
+        if (pwd.length >= 10 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd)) return { label: 'Rất mạnh', color: 'bg-green-500', width: '100%' }
+        return { label: 'Khá mạnh', color: 'bg-blue-500', width: '75%' }
+    }
+
+    const handleChangePassword = async () => {
+        if (!pwdForm.currentPassword || !pwdForm.newPassword || !pwdForm.confirmPassword) {
+            toast.error('Vui lòng điền đầy đủ thông tin')
+            return
+        }
+        if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+            toast.error('Mật khẩu mới và xác nhận mật khẩu không khớp')
+            return
+        }
+        if (pwdForm.newPassword.length < 6) {
+            toast.error('Mật khẩu mới phải có ít nhất 6 ký tự')
+            return
+        }
+        try {
+            await changePassword(pwdForm).unwrap()
+            toast.success('Đổi mật khẩu thành công!')
+            setPwdForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        } catch (err: any) {
+            toast.error(err?.data?.message || err?.data || 'Đổi mật khẩu thất bại')
+        }
+    }
 
     const handleCreateAddress = async () => {
         if (!addrForm.recipientName || !addrForm.recipientPhone || !addrForm.addressLine || !addrForm.ward || !addrForm.district || !addrForm.city) {
@@ -73,6 +107,7 @@ export default function ProfilePage() {
         { id: 'profile' as Tab, label: '👤 Thông tin', icon: '👤' },
         { id: 'addresses' as Tab, label: '📍 Địa chỉ', icon: '📍' },
         { id: 'orders' as Tab, label: '📦 Đơn hàng', icon: '📦' },
+        { id: 'security' as Tab, label: '🔒 Bảo mật', icon: '🔒' },
     ]
 
     return (
@@ -296,6 +331,134 @@ export default function ProfilePage() {
                             <p className="text-gray-500">Chưa có đơn hàng nào</p>
                         </div>
                     )}
+                </div>
+            )}
+            {/* Security Tab */}
+            {activeTab === 'security' && (
+                <div className="bg-white border rounded-xl p-6 shadow-sm max-w-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span className="text-xl">🔒</span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900">Đổi mật khẩu</h2>
+                            <p className="text-sm text-gray-500">Để bảo vệ tài khoản, vui lòng không chia sẻ mật khẩu</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {/* Current Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input
+                                    id="current-password-input"
+                                    type={showPwd.current ? 'text' : 'password'}
+                                    value={pwdForm.currentPassword}
+                                    onChange={e => setPwdForm(p => ({ ...p, currentPassword: e.target.value }))}
+                                    className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all"
+                                    placeholder="Nhập mật khẩu hiện tại"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPwd(p => ({ ...p, current: !p.current }))}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPwd.current ? '🙈' : '👁️'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* New Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input
+                                    id="new-password-input"
+                                    type={showPwd.newPwd ? 'text' : 'password'}
+                                    value={pwdForm.newPassword}
+                                    onChange={e => setPwdForm(p => ({ ...p, newPassword: e.target.value }))}
+                                    className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all"
+                                    placeholder="Ít nhất 6 ký tự"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPwd(p => ({ ...p, newPwd: !p.newPwd }))}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPwd.newPwd ? '🙈' : '👁️'}
+                                </button>
+                            </div>
+                            {/* Strength indicator */}
+                            {pwdForm.newPassword.length > 0 && (() => {
+                                const strength = getPasswordStrength(pwdForm.newPassword)
+                                return (
+                                    <div className="mt-2">
+                                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                            <div className={`h-full rounded-full transition-all duration-500 ${strength.color}`} style={{ width: strength.width }}></div>
+                                        </div>
+                                        <p className={`text-xs mt-1 font-medium ${strength.color.replace('bg-', 'text-')}`}>{strength.label}</p>
+                                    </div>
+                                )
+                            })()}
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu mới <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input
+                                    id="confirm-password-input"
+                                    type={showPwd.confirm ? 'text' : 'password'}
+                                    value={pwdForm.confirmPassword}
+                                    onChange={e => setPwdForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all ${
+                                        pwdForm.confirmPassword && pwdForm.confirmPassword !== pwdForm.newPassword
+                                            ? 'border-red-400 bg-red-50'
+                                            : pwdForm.confirmPassword && pwdForm.confirmPassword === pwdForm.newPassword
+                                            ? 'border-green-400 bg-green-50'
+                                            : 'border-gray-300'
+                                    }`}
+                                    placeholder="Nhập lại mật khẩu mới"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPwd(p => ({ ...p, confirm: !p.confirm }))}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPwd.confirm ? '🙈' : '👁️'}
+                                </button>
+                            </div>
+                            {pwdForm.confirmPassword && pwdForm.confirmPassword !== pwdForm.newPassword && (
+                                <p className="text-xs text-red-500 mt-1">⚠️ Mật khẩu không khớp</p>
+                            )}
+                            {pwdForm.confirmPassword && pwdForm.confirmPassword === pwdForm.newPassword && (
+                                <p className="text-xs text-green-600 mt-1">✅ Mật khẩu khớp</p>
+                            )}
+                        </div>
+
+                        <button
+                            id="change-password-btn"
+                            onClick={handleChangePassword}
+                            disabled={changingPwd}
+                            className="w-full mt-2 py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+                        >
+                            {changingPwd ? (
+                                <><span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span> Đang xử lý...</>
+                            ) : (
+                                <>🔐 Cập nhật mật khẩu</>
+                            )}
+                        </button>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                        <p className="text-sm text-blue-700 font-medium mb-1">💡 Mẹo bảo mật</p>
+                        <ul className="text-xs text-blue-600 space-y-1 list-disc list-inside">
+                            <li>Mật khẩu nên có ít nhất 8 ký tự</li>
+                            <li>Kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt</li>
+                            <li>Không sử dụng thông tin cá nhân dễ đoán</li>
+                        </ul>
+                    </div>
                 </div>
             )}
         </div>
