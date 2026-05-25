@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useMemo } from 'react'
 import { useAppSelector } from '../../app/hooks'
 import { selectCurrentUser } from '../../features/auth/authSlice'
 import { useGetOrdersQuery, useUpdateSubOrderStatusMutation } from '../../features/orders/orderApi'
-import { useGetProductsQuery, useCreateProductMutation, useDeleteProductMutation, type CreateProductRequest } from '../../features/products/productApi'
+import { useGetProductsQuery, useCreateProductMutation, useDeleteProductMutation, useUpdateProductMutation, type CreateProductRequest } from '../../features/products/productApi'
 import { useGetVendorStatsQuery } from '../../features/vendors/vendorApi'
 import { useUploadImageMutation } from '../../features/upload/uploadApi'
 import { toast } from 'sonner'
@@ -47,6 +47,7 @@ export default function VendorDashboardPage() {
         pollingInterval: 15000
     })
     const { data: productsData, isLoading: loadingProducts } = useGetProductsQuery({ vendorId: user?.vendorId ?? undefined })
+    const [updateProduct] = useUpdateProductMutation()
     const { data: stats, isLoading: loadingStats } = useGetVendorStatsQuery(undefined, {
         pollingInterval: 30000
     })
@@ -59,6 +60,12 @@ export default function VendorDashboardPage() {
     const [uploadedImages, setUploadedImages] = useState<{ url: string; publicId: string }[]>([])
     const [uploading, setUploading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    // Edit mode state (inline editor like admin page)
+    const [editingId, setEditingId] = useState<number | null>(null)
+    const [editForm, setEditForm] = useState<Partial<CreateProductRequest>>({})
+    const [editImages, setEditImages] = useState<string[]>([])
+    const [editUploading, setEditUploading] = useState(false)
+    const editFileInputRef = useRef<HTMLInputElement>(null)
 
     // Countdown state: { subOrderId: secondsRemaining }
     const [countdowns, setCountdowns] = useState<Record<number, number>>({})
@@ -135,6 +142,7 @@ export default function VendorDashboardPage() {
     }, [countdowns, updateSubOrderStatus])
 
     const products = productsData?.content || []
+    const editingProduct = products.find(p => p.id === editingId) || null
 
     const revenueData = useMemo(() => {
         if (!stats?.revenueChart) return []
@@ -223,6 +231,65 @@ export default function VendorDashboardPage() {
         }
     }
 
+    const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (!files || files.length === 0) return
+        setEditUploading(true)
+        try {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i]
+                if (!file.type.startsWith('image/')) { toast.error(`"${file.name}" không phải file ảnh`); continue }
+                if (file.size > 5 * 1024 * 1024) { toast.error(`"${file.name}" quá lớn (tối đa 5MB)`); continue }
+                const formData = new FormData()
+                formData.append('file', file)
+                const result = await uploadImage(formData).unwrap()
+                setEditImages(prev => [...prev, result.url])
+                toast.success(`Đã tải "${file.name}"`)
+            }
+        } catch (err: any) {
+            toast.error(err?.data?.message || 'Tải ảnh thất bại')
+        } finally {
+            setEditUploading(false)
+            if (editFileInputRef.current) editFileInputRef.current.value = ''
+        }
+    }
+
+    const removeEditImage = (index: number) => {
+        setEditImages(prev => prev.filter((_, i) => i !== index))
+    }
+
+    const startEdit = (product: any) => {
+        setEditingId(product.id)
+        setForm({
+            name: product.name,
+            description: product.description || '',
+            basePrice: String(product.basePrice),
+            region: product.region || '',
+            category: product.category || '',
+            available: product.available ?? true,
+            featured: product.featured ?? false,
+        })
+        setUploadedImages((product.images || []).map((u: string) => ({ url: u, publicId: '' })))
+        setShowAddForm(true)
+    }
+
+    const cancelEdit = () => {
+        setEditingId(null)
+        setEditForm({})
+        setEditImages([])
+    }
+
+    const handleSaveEdit = async () => {
+        if (editingId === null) return
+        try {
+            await updateProduct({ id: editingId, body: { ...editForm, images: editImages } }).unwrap()
+            toast.success('Cập nhật sản phẩm thành công!')
+            cancelEdit()
+        } catch (err: any) {
+            toast.error(err?.data?.message || 'Cập nhật thất bại')
+        }
+    }
+
     const removeUploadedImage = (index: number) => {
         setUploadedImages(prev => prev.filter((_, i) => i !== index))
     }
@@ -245,13 +312,19 @@ export default function VendorDashboardPage() {
                 available: form.available,
                 featured: form.featured,
             }
-            await createProduct(productData).unwrap()
-            toast.success('Thêm sản phẩm thành công!')
+            if (editingId !== null) {
+                await updateProduct({ id: editingId, body: productData }).unwrap()
+                toast.success('Cập nhật sản phẩm thành công!')
+                setEditingId(null)
+            } else {
+                await createProduct(productData).unwrap()
+                toast.success('Thêm sản phẩm thành công!')
+            }
             setForm(initialProductForm)
             setUploadedImages([])
             setShowAddForm(false)
         } catch (err: any) {
-            toast.error(err?.data?.message || 'Thêm sản phẩm thất bại')
+            toast.error(err?.data?.message || (editingId ? 'Cập nhật thất bại' : 'Thêm sản phẩm thất bại'))
         }
     }
 
@@ -568,7 +641,7 @@ export default function VendorDashboardPage() {
                     {/* ... form ... */}
                     {showAddForm && (
                         <div className="bg-white border-2 border-primary/30 rounded-xl p-6 shadow-lg mb-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Thêm sản phẩm mới</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">{editingId ? `✏️ Chỉnh sửa sản phẩm ${editingProduct ? `#${editingProduct.id}` : ''}` : 'Thêm sản phẩm mới'}</h3>
                             {/* ... (abbreviated form content similar to original file) ... */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
@@ -621,8 +694,8 @@ export default function VendorDashboardPage() {
                                 </div>
                             </div>
                             <div className="flex gap-3 mt-6">
-                                <button onClick={handleCreateProduct} disabled={creating} className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-green-700 transition-all font-bold disabled:opacity-70 shadow-md">{creating ? 'Đang tạo...' : 'Thêm sản phẩm'}</button>
-                                <button onClick={() => { setShowAddForm(false); setForm(initialProductForm); setUploadedImages([]) }} className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all font-medium">Huỷ</button>
+                                <button onClick={handleCreateProduct} disabled={creating} className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-green-700 transition-all font-bold disabled:opacity-70 shadow-md">{creating ? 'Đang tạo...' : (editingId ? 'Lưu' : 'Thêm sản phẩm')}</button>
+                                <button onClick={() => { setShowAddForm(false); setForm(initialProductForm); setUploadedImages([]); setEditingId(null) }} className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all font-medium">Huỷ</button>
                             </div>
                         </div>
                     )}
@@ -650,7 +723,8 @@ export default function VendorDashboardPage() {
                                             <span className={`text-xs px-2 py-0.5 rounded-full ${product.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{product.available ? 'Còn hàng' : 'Hết hàng'}</span>
                                         </div>
                                         <div className="flex gap-2">
-                                            <Link to={`/product/${product.id}`} className="flex-1 text-center text-xs px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium">Xem</Link>
+                                            <Link to={`/product/${product.id}`} className="text-center text-xs px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium">Xem</Link>
+                                            <button onClick={() => startEdit(product)} className="text-center text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 font-medium">Sửa</button>
                                             <button onClick={() => handleDeleteProduct(product.id, product.name)} className="text-xs px-3 py-1.5 border border-red-300 text-red-500 rounded-lg hover:bg-red-50 font-medium">Xoá</button>
                                         </div>
                                     </div>
