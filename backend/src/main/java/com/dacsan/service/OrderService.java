@@ -36,7 +36,7 @@ public class OrderService {
         private final CartRepository cartRepository;
         private final CartItemRepository cartItemRepository;
         private final VendorRepository vendorRepository;
-        private final VNPayService vnPayService;
+        private final PaymentService vnPayService;
         private final ObjectMapper objectMapper;
         private final NotificationService notificationService; // WebSocket notifications
 
@@ -173,8 +173,22 @@ public class OrderService {
                 // 9. Return response with sub-orders
                 log.info("Order {} creation complete, returning response", order.getOrderNumber());
 
-                if (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
-                        String paymentUrl = vnPayService.createPaymentUrl(order, httpRequest);
+                if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
+                        String paymentUrl = vnPayService.createVnpayPaymentUrl(order, httpRequest);
+                        OrderResponse response = buildOrderResponse(order, subOrders);
+                        response.setPaymentUrl(paymentUrl);
+                        return response;
+                }
+
+                if (request.getPaymentMethod() == PaymentMethod.MOMO_ATM) {
+                        String paymentUrl = vnPayService.createMomoATM(order);
+                        OrderResponse response = buildOrderResponse(order, subOrders);
+                        response.setPaymentUrl(paymentUrl);
+                        return response;
+                }
+
+                if (request.getPaymentMethod() == PaymentMethod.MOMO_QR) {
+                        String paymentUrl = vnPayService.createMomoQR(order);
                         OrderResponse response = buildOrderResponse(order, subOrders);
                         response.setPaymentUrl(paymentUrl);
                         return response;
