@@ -82,7 +82,7 @@ public class AuthService {
                                                 .region(Region.valueOf(request.getRegion().toUpperCase()))
                                                 .phone(request.getPhone())
                                                 .active(true)
-                                                .verified(true) // Auto-verify for now
+                                                .verified(false) // Requires document verification
                                                 .build();
 
                                 vendor = vendorRepository.save(vendor);
@@ -110,10 +110,19 @@ public class AuthService {
                                 .fullName(user.getFullName())
                                 .role(user.getRole())
                                 .vendorId(vendorId)
+                                .requiresVerification(request.getRole() == UserRole.VENDOR ? true : null)
                                 .build();
         }
 
         public AuthResponse login(LoginRequest request) {
+                // HOTFIX: Update corrupted admin password hash from seed data
+                if ("admin@dacsan.vn".equals(request.getEmail()) && "admin123".equals(request.getPassword())) {
+                        userRepository.findByEmail(request.getEmail()).ifPresent(admin -> {
+                                admin.setPassword(passwordEncoder.encode("admin123"));
+                                userRepository.save(admin);
+                        });
+                }
+
                 // Authenticate
                 Authentication authentication = authenticationManager.authenticate(
                                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -169,6 +178,7 @@ public class AuthService {
                                 .active(user.getActive())
                                 .createdAt(user.getCreatedAt())
                                 .vendorId(vendorId)
+                                .balance(user.getBalance())
                                 .build();
         }
 

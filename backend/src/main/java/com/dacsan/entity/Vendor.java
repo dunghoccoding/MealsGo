@@ -7,6 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "vendors")
@@ -56,6 +57,9 @@ public class Vendor {
 
     @Column(nullable = false)
     private Boolean verified = false; // Admin approval required
+
+    @Column(precision = 19, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

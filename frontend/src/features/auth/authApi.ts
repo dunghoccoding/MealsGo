@@ -25,6 +25,8 @@ export interface AuthResponse {
     fullName: string
     role: 'CUSTOMER' | 'VENDOR' | 'ADMIN'
     vendorId: number | null
+    requiresVerification?: boolean
+    balance?: number
 }
 
 export const authApi = api.injectEndpoints({

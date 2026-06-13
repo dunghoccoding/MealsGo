@@ -4,6 +4,8 @@ import { toast } from 'sonner'
 import { useGetCartQuery } from '../../features/cart/cartApi'
 import { useGetAddressesQuery, useCreateAddressMutation } from '../../features/addresses/addressApi'
 import { useCreateOrderMutation } from '../../features/orders/orderApi'
+import { useGetActiveVouchersQuery, useValidateVoucherMutation } from '../../features/vouchers/voucherApi'
+import { Ticket } from 'lucide-react'
 
 export default function CheckoutPage() {
     const navigate = useNavigate()
@@ -19,6 +21,12 @@ export default function CheckoutPage() {
     const [addrForm, setAddrForm] = useState({
         recipientName: '', recipientPhone: '', addressLine: '', ward: '', district: '', city: '', label: 'HOME'
     })
+    const [voucherCode, setVoucherCode] = useState('')
+    const [voucherDiscount, setVoucherDiscount] = useState(0)
+    const [voucherMessage, setVoucherMessage] = useState('')
+    const [voucherValid, setVoucherValid] = useState<boolean | null>(null)
+    const { data: activeVouchers } = useGetActiveVouchersQuery()
+    const [validateVoucher, { isLoading: validatingVoucher }] = useValidateVoucherMutation()
 
     const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 
@@ -48,17 +56,56 @@ export default function CheckoutPage() {
             toast.error('Vui lòng chọn địa chỉ giao hàng')
             return
         }
+
         try {
             const order = await createOrder({
                 addressId: selectedAddressId,
                 paymentMethod,
                 notes: notes || undefined,
+                ...(voucherValid && voucherCode ? { voucherCode } : {}),
             }).unwrap()
+
+            if (paymentMethod === 'BANK_TRANSFER' && order.paymentUrl) {
+                window.location.href = order.paymentUrl
+                return
+            }
+
             toast.success(`Đặt hàng thành công! Đơn #${order.orderNumber}`)
             navigate('/profile?tab=orders')
+
         } catch (err: any) {
             toast.error(err?.data?.message || 'Đặt hàng thất bại')
         }
+    }
+
+    const handleApplyVoucher = async () => {
+        if (!voucherCode.trim()) {
+            toast.error('Vui lòng nhập mã voucher')
+            return
+        }
+        try {
+            const result = await validateVoucher({
+                code: voucherCode.trim(),
+                orderTotal: cart?.totalAmount ?? 0,
+            }).unwrap()
+            setVoucherValid(true)
+            const msg = `Áp dụng thành công mã giảm ${formatPrice(result.discountValue)}`
+            setVoucherMessage(msg)
+            setVoucherDiscount(result.discountValue)
+            toast.success(msg)
+        } catch (err: any) {
+            setVoucherValid(false)
+            setVoucherDiscount(0)
+            setVoucherMessage(err?.data?.message || 'Mã voucher không hợp lệ')
+            toast.error(err?.data?.message || 'Mã voucher không hợp lệ')
+        }
+    }
+
+    const handleRemoveVoucher = () => {
+        setVoucherCode('')
+        setVoucherDiscount(0)
+        setVoucherMessage('')
+        setVoucherValid(null)
     }
 
     if (loadingCart || loadingAddr) {
@@ -74,6 +121,9 @@ export default function CheckoutPage() {
         navigate('/cart')
         return null
     }
+
+    const cartVendorIds = new Set(cart.items.map(item => item.vendorId))
+    const availableVouchers = activeVouchers?.filter(v => v.vendorId === null || cartVendorIds.has(v.vendorId)) || []
 
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -158,6 +208,25 @@ export default function CheckoutPage() {
                                 <span className="font-medium">🏦 Chuyển khoản ngân hàng</span>
                             </label>
                         </div>
+                        {paymentMethod === 'BANK_TRANSFER' && (
+                            <div className="mt-4 p-4 border border-blue-100 bg-blue-50 rounded-xl flex flex-col md:flex-row items-center gap-6">
+                                <div className="bg-white p-2 rounded-xl shadow-sm">
+                                    <img 
+                                        src={`https://img.vietqr.io/image/MB-0987654321-compact2.png?amount=${Math.max(0, cart.totalAmount - voucherDiscount)}&addInfo=ThanhToanMealsGo&accountName=MEALSGO%20FOOD`} 
+                                        alt="VietQR" 
+                                        className="w-40 h-40 object-contain"
+                                    />
+                                </div>
+                                <div className="space-y-2 text-sm text-blue-900">
+                                    <p className="font-bold text-base text-blue-700">Thông tin chuyển khoản</p>
+                                    <p>Ngân hàng: <strong>MB Bank (Ngân hàng Quân Đội)</strong></p>
+                                    <p>Số tài khoản: <strong>0987654321</strong></p>
+                                    <p>Chủ tài khoản: <strong>MEALSGO FOOD</strong></p>
+                                    <p>Số tiền: <strong className="text-rose-600 text-lg">{formatPrice(Math.max(0, cart.totalAmount - voucherDiscount))}</strong></p>
+                                    <p className="text-xs text-blue-600 mt-2">* Quét mã QR bằng ứng dụng ngân hàng của bạn. Đơn hàng sẽ được xử lý ngay sau khi nhận được thanh toán.</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Notes */}
@@ -196,9 +265,71 @@ export default function CheckoutPage() {
                                 <span className="text-gray-600">Phí giao hàng:</span>
                                 <span className="font-medium text-green-600">Tính khi đặt</span>
                             </div>
+
+                            {/* Voucher Section */}
+                            <div className="border-t pt-3 mt-3">
+                                <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                                    <Ticket className="w-4 h-4 text-orange-500" />
+                                    Mã giảm giá
+                                </h3>
+
+                                {/* Available Vouchers List */}
+                                {availableVouchers.length > 0 && !voucherValid && (
+                                    <div className="mb-3 flex flex-wrap gap-2">
+                                        {availableVouchers.map(v => (
+                                            <button
+                                                key={v.id}
+                                                onClick={() => setVoucherCode(v.code)}
+                                                className="text-left bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg p-2 text-xs transition-colors flex-1 min-w-[120px]"
+                                            >
+                                                <div className="font-bold text-orange-600 mb-0.5">{v.code}</div>
+                                                <div className="text-orange-800/70 truncate">{v.description}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {voucherValid ? (
+                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-2">
+                                        <div>
+                                            <span className="text-sm font-bold text-green-700">{voucherCode}</span>
+                                            <p className="text-xs text-green-600">{voucherMessage}</p>
+                                        </div>
+                                        <button onClick={handleRemoveVoucher} className="text-xs text-red-500 hover:text-red-700 font-medium">Bỏ</button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={voucherCode}
+                                            onChange={e => setVoucherCode(e.target.value.toUpperCase())}
+                                            placeholder="Nhập mã voucher"
+                                            className="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        />
+                                        <button
+                                            onClick={handleApplyVoucher}
+                                            disabled={validatingVoucher || !voucherCode.trim()}
+                                            className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                        >
+                                            {validatingVoucher ? '...' : 'Áp dụng'}
+                                        </button>
+                                    </div>
+                                )}
+                                {voucherValid === false && voucherMessage && (
+                                    <p className="text-xs text-red-500 mt-1">{voucherMessage}</p>
+                                )}
+                            </div>
+
+                            {voucherDiscount > 0 && (
+                                <div className="flex justify-between text-sm text-green-600">
+                                    <span>Giảm giá voucher:</span>
+                                    <span className="font-medium">-{formatPrice(voucherDiscount)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between text-lg font-bold border-t pt-2">
                                 <span>Tổng cộng:</span>
-                                <span className="text-primary">{formatPrice(cart.totalAmount)}</span>
+                                <span className="text-primary">{formatPrice(Math.max(0, cart.totalAmount - voucherDiscount))}</span>
                             </div>
                         </div>
                         <button

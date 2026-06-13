@@ -101,7 +101,10 @@ export const productApi = api.injectEndpoints({
             }),
             invalidatesTags: ['Products'],
         }),
+        getListingFeeInfo: builder.query<{ nextFee: number; totalProductsListed: number }, void>({
+            query: () => '/products/listing-fee-info',
+        }),
     }),
 })
 
-export const { useGetProductsQuery, useGetProductByIdQuery, useCreateProductMutation, useDeleteProductMutation } = productApi
+export const { useGetProductsQuery, useGetProductByIdQuery, useCreateProductMutation, useDeleteProductMutation, useGetListingFeeInfoQuery } = productApi

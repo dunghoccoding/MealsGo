@@ -95,4 +95,66 @@ public class UploadService {
             log.warn("Image not found: {}", publicId);
         }
     }
+
+    public UploadResponse uploadDocument(MultipartFile file) throws IOException {
+        // Validate file type (images and PDFs)
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.startsWith("image/") && !contentType.equals("application/pdf"))) {
+            throw new IllegalArgumentException("File must be an image or PDF");
+        }
+
+        // Validate file size (max 10MB)
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new IllegalArgumentException("File size must not exceed 10MB");
+        }
+
+        log.info("Uploading document locally: {} (size: {} bytes)", file.getOriginalFilename(), file.getSize());
+
+        // Create uploads directory if not exists
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath();
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Generate unique filename
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String uniqueFilename = UUID.randomUUID().toString() + extension;
+
+        // Save file
+        Path filePath = uploadPath.resolve(uniqueFilename);
+        Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        // Get image dimensions only for image files
+        Integer width = null;
+        Integer height = null;
+        if (contentType.startsWith("image/")) {
+            try {
+                BufferedImage img = ImageIO.read(filePath.toFile());
+                if (img != null) {
+                    width = img.getWidth();
+                    height = img.getHeight();
+                }
+            } catch (Exception e) {
+                log.warn("Could not read image dimensions for {}", uniqueFilename);
+            }
+        }
+
+        // Build URL
+        String url = "/uploads/" + uniqueFilename;
+
+        log.info("Document upload successful. File saved: {}", filePath.toAbsolutePath());
+
+        return UploadResponse.builder()
+                .url(url)
+                .publicId(uniqueFilename)
+                .format(extension.replace(".", ""))
+                .size(file.getSize())
+                .width(width)
+                .height(height)
+                .build();
+    }
 }

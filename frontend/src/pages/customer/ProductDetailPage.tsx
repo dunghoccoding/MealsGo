@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useGetProductByIdQuery } from '../../features/products/productApi'
+import { useGetActiveVouchersQuery } from '../../features/vouchers/voucherApi'
 import { useAddToCartMutation } from '../../features/cart/cartApi'
 import { useAppSelector } from '../../app/hooks'
 import { selectIsAuthenticated } from '../../features/auth/authSlice'
 import type { SelectedVariant } from '../../features/cart/cartApi'
-import { Store, Star, ShoppingCart, Minus, Plus, ArrowLeft, Loader2, ChevronRight, AlertCircle, Utensils } from 'lucide-react'
+import { Store, Star, ShoppingCart, Minus, Plus, ArrowLeft, Loader2, ChevronRight, AlertCircle, Utensils, Ticket, Copy } from 'lucide-react'
 import RecommendationSection from '../../components/product/RecommendationSection'
 
 export default function ProductDetailPage() {
@@ -14,6 +15,7 @@ export default function ProductDetailPage() {
     const navigate = useNavigate()
     const isAuthenticated = useAppSelector(selectIsAuthenticated)
     const { data: product, isLoading, error } = useGetProductByIdQuery(Number(id))
+    const { data: activeVouchers } = useGetActiveVouchersQuery()
     const [addToCart, { isLoading: isAdding }] = useAddToCartMutation()
     const [quantity, setQuantity] = useState(1)
     const [selectedVariants, setSelectedVariants] = useState<Record<number, SelectedVariant>>({})
@@ -99,6 +101,14 @@ export default function ProductDetailPage() {
     }
     const regionNames: Record<string, string> = { NORTH: 'Miền Bắc', CENTRAL: 'Miền Trung', SOUTH: 'Miền Nam' }
 
+    const vendorVouchers = activeVouchers?.filter(v => v.vendorId === product?.vendorId) || []
+    const systemVouchers = activeVouchers?.filter(v => v.vendorId === null) || []
+
+    const handleCopyVoucher = (code: string) => {
+        navigator.clipboard.writeText(code)
+        toast.success(`Đã sao chép mã: ${code}`)
+    }
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
             {/* Breadcrumb */}
@@ -160,7 +170,7 @@ export default function ProductDetailPage() {
                         )}
                     </div>
 
-                    <h1 className="text-4xl md:text-5xl font-display font-black text-slate-900 mb-3 tracking-tight">{product.name}</h1>
+                    <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-3 tracking-tight">{product.name}</h1>
                     <Link to={`/vendor/${product.vendorId || ''}`} className="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors font-medium mb-6">
                         <Store className="w-4 h-4" />
                         <span>{product.vendorName}</span>
@@ -193,7 +203,7 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
 
-                    <div className="text-4xl font-display font-black text-primary-600 mb-8 tracking-tight">
+                    <div className="text-4xl font-display font-bold text-primary-600 mb-8 tracking-tight">
                         {formatPrice(product.basePrice)}
                     </div>
 
@@ -211,7 +221,7 @@ export default function ProductDetailPage() {
                                             {group.name}
                                         </p>
                                         {group.isRequired && (
-                                            <span className="text-[10px] uppercase font-black tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
+                                            <span className="text-[10px] uppercase font-bold tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
                                                 Bắt buộc
                                             </span>
                                         )}
@@ -240,6 +250,38 @@ export default function ProductDetailPage() {
                         </div>
                     )}
 
+                    {/* Vouchers */}
+                    {(vendorVouchers.length > 0 || systemVouchers.length > 0) && (
+                        <div className="mb-8 bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+                            <h3 className="flex items-center gap-2 font-display font-bold text-slate-800 mb-4">
+                                <Ticket className="w-5 h-5 text-rose-500" />
+                                Ưu đãi dành cho bạn
+                            </h3>
+                            <div className="flex flex-col gap-3">
+                                {[...vendorVouchers, ...systemVouchers].map(voucher => (
+                                    <div key={voucher.id} className="flex items-center justify-between bg-rose-50/50 border border-rose-100 rounded-xl p-3 border-dashed">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="font-bold text-rose-600 bg-white px-2 py-0.5 rounded border border-rose-100 text-sm">{voucher.code}</span>
+                                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                                    {voucher.vendorId ? 'Voucher Shop' : 'Voucher Hệ Thống'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-slate-600">{voucher.description}</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleCopyVoucher(voucher.code)}
+                                            className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors flex flex-col items-center gap-1"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                            <span className="text-[10px] font-medium uppercase tracking-wider">Lấy mã</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Quantity */}
                     <div className="flex items-center justify-between mb-8 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm">
                         <span className="font-display font-bold text-slate-800">Số lượng</span>
@@ -250,7 +292,7 @@ export default function ProductDetailPage() {
                             >
                                 <Minus className="w-4 h-4" />
                             </button>
-                            <span className="px-6 text-lg font-display font-black min-w-[50px] text-center text-slate-800">{quantity}</span>
+                            <span className="px-6 text-lg font-display font-bold min-w-[50px] text-center text-slate-800">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(q => q + 1)}
                                 className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:bg-slate-50 transition-colors text-slate-600"
@@ -266,7 +308,7 @@ export default function ProductDetailPage() {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
                             <div className="relative z-10 flex justify-between items-center">
                                 <span className="text-emerald-100 font-medium">Tổng thanh toán:</span>
-                                <span className="text-3xl font-display font-black text-white tracking-tight">{formatPrice(totalPrice())}</span>
+                                <span className="text-3xl font-display font-bold text-white tracking-tight">{formatPrice(totalPrice())}</span>
                             </div>
                         </div>
 

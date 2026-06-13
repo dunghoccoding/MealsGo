@@ -27,6 +27,7 @@ export interface SubOrder {
     items: OrderItem[]
     createdAt: string
     updatedAt: string
+    paymentMethod: string
 }
 
 export interface OrderResponse {
@@ -38,6 +39,7 @@ export interface OrderResponse {
     shippingFee: number
     status: string
     paymentMethod: string
+    paymentUrl: string
     deliveryName: string
     deliveryPhone: string
     deliveryAddress: string

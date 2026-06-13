@@ -31,6 +31,7 @@ public class OrderResponse {
     private String deliveryPhone;
     private String deliveryAddress;
     private String notes;
+    private String paymentUrl;
 
     // Sub-orders (grouped by vendor)
     private List<SubOrderResponse> subOrders = new ArrayList<>();

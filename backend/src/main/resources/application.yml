@@ -4,8 +4,8 @@ spring:
   
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://localhost:3306/dacsan_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-    username: ${DATABASE_USERNAME:root}
-    password: ${DATABASE_PASSWORD:Vucg81aBc@}
+    username: root
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   jpa:
@@ -50,20 +50,17 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET:ZGFjc2FuU2VjcmV0S2V5Q2hhbmdlVGhpc0luUHJvZHVjdGlvblBsZWFzZU1ha2VJdFZlcnlMb25nQW5kU2VjdXJl}
-    expiration: 86400000 # 24 hours in milliseconds
+    expiration: 86400000
 
-# Cloudinary Configuration (Disabled - using local storage)
 cloudinary:
   enabled: false
   cloud-name: ${CLOUDINARY_CLOUD_NAME:your-cloud-name}
   api-key: ${CLOUDINARY_API_KEY:your-api-key}
   api-secret: ${CLOUDINARY_API_SECRET:your-api-secret}
 
-# Local file upload
 upload:
   dir: uploads
 
-# Actuator endpoints
 management:
   endpoints:
     web:
@@ -73,7 +70,6 @@ management:
     health:
       show-details: when-authorized
 
-# Logging
 logging:
   level:
     com.dacsan: DEBUG

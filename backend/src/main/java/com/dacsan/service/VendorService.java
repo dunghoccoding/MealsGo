@@ -25,6 +25,8 @@ public class VendorService {
         private final SubOrderRepository subOrderRepository;
 
         public VendorStatsResponse getDashboardStats(Long vendorId) {
+                Vendor vendor = vendorRepository.findById(vendorId)
+                                .orElseThrow(() -> new RuntimeException("Vendor not found"));
                 List<SubOrder> subOrders = subOrderRepository.findByVendorIdOrderByCreatedAtDesc(vendorId);
 
                 BigDecimal totalRevenue = subOrders.stream()
@@ -75,6 +77,7 @@ public class VendorService {
                                 .completedOrders(completed)
                                 .cancelledOrders(cancelled)
                                 .revenueChart(new ArrayList<>(dailyMap.values()))
+                                .walletBalance(vendor.getBalance())
                                 .build();
         }
 
@@ -102,6 +105,38 @@ public class VendorService {
                 return mapToVendorResponse(vendor);
         }
 
+        public VendorResponse getVendorByUserId(Long userId) {
+                Vendor vendor = vendorRepository.findByUserId(userId)
+                                .orElseThrow(() -> new RuntimeException("Vendor profile not found for user"));
+                return mapToVendorResponse(vendor);
+        }
+
+        public VendorResponse topupWallet(Long vendorId, BigDecimal amount) {
+                Vendor vendor = vendorRepository.findById(vendorId)
+                                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                        throw new RuntimeException("Amount must be greater than zero");
+                }
+
+                // Calculate bonus
+                BigDecimal bonus = BigDecimal.ZERO;
+                if (amount.compareTo(new BigDecimal("5000000")) >= 0) {
+                    bonus = new BigDecimal("1500000");
+                } else if (amount.compareTo(new BigDecimal("2000000")) >= 0) {
+                    bonus = new BigDecimal("500000");
+                } else if (amount.compareTo(new BigDecimal("1000000")) >= 0) {
+                    bonus = new BigDecimal("200000");
+                }
+
+                BigDecimal totalToAdd = amount.add(bonus);
+                BigDecimal currentBalance = vendor.getBalance() != null ? vendor.getBalance() : BigDecimal.ZERO;
+                vendor.setBalance(currentBalance.add(totalToAdd));
+                vendor = vendorRepository.save(vendor);
+
+                return mapToVendorResponse(vendor);
+        }
+
         private VendorResponse mapToVendorResponse(Vendor vendor) {
                 return VendorResponse.builder()
                                 .id(vendor.getId())
@@ -118,6 +153,7 @@ public class VendorService {
                                 .active(vendor.getActive())
                                 .verified(vendor.getVerified())
                                 .createdAt(vendor.getCreatedAt())
+                                .balance(vendor.getBalance())
                                 .build();
         }
 }
