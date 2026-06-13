@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -66,6 +67,14 @@ public class ProductController {
     @Operation(summary = "Get top 10 best selling products")
     public ResponseEntity<List<ProductResponse>> getBestSellers() {
         return ResponseEntity.ok(productService.getBestSellers());
+    }
+
+    @GetMapping("/listing-fee-info")
+    @PreAuthorize("hasRole('VENDOR')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Get listing fee info for next product (Vendor only)")
+    public ResponseEntity<Map<String, Object>> getListingFeeInfo() {
+        return ResponseEntity.ok(productService.getListingFeeInfo());
     }
 
     @PostMapping

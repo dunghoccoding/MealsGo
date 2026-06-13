@@ -34,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                     {/* Region Overlay */}
                     <div className="absolute top-3 right-3">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter text-white shadow-xl ${regionColors[product.region]}`}>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white shadow-xl ${regionColors[product.region]}`}>
                             {regionNames[product.region] || product.region}
                         </span>
                     </div>
@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {/* Availability Overlay */}
                     {!product.available && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
-                            <span className="px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-black uppercase tracking-widest shadow-lg transform -rotate-3">
+                            <span className="px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg transform -rotate-3">
                                 Tạm hết
                             </span>
                         </div>
@@ -74,7 +74,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giá từ</span>
-                            <span className="text-xl font-display font-black text-primary-600 tracking-tight">
+                            <span className="text-xl font-display font-bold text-primary-600 tracking-tight">
                                 {Number(product.basePrice).toLocaleString('vi-VN')}đ
                             </span>
                         </div>

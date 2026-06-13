@@ -8,6 +8,7 @@ import CartPage from './pages/customer/CartPage'
 import ProfilePage from './pages/customer/ProfilePage'
 import CheckoutPage from './pages/customer/CheckoutPage'
 import VendorDashboardPage from './pages/vendor/VendorDashboardPage'
+import VendorVerificationPage from './pages/vendor/VendorVerificationPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import { Toaster } from 'sonner'
 import NotificationToast from './components/common/NotificationToast'
@@ -34,6 +35,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/vendor/dashboard" element={<VendorDashboardPage />} />
+          <Route path="/vendor/verification" element={<VendorVerificationPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         </Route>
       </Routes>
@@ -64,7 +66,7 @@ function LandingPage() {
             <span>Tinh hoa ẩm thực Việt Nam</span>
           </div>
           
-          <h1 className="text-7xl md:text-9xl font-display font-black text-white mb-4 tracking-tighter drop-shadow-2xl">
+          <h1 className="text-7xl md:text-9xl font-display font-bold text-white mb-4 tracking-tighter drop-shadow-2xl">
             Meals<span className="text-emerald-500">Go</span>
           </h1>
           

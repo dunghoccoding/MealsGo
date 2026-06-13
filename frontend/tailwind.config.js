@@ -54,14 +54,15 @@ export default {
                 'region-central': '#b45309',
                 'region-south': '#065f46',
             },
-            fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
-                display: ['Outfit', 'sans-serif'],
             },
             boxShadow: {
                 'premium': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03)',
                 'premium-hover': '0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 15px -5px rgba(0, 0, 0, 0.05)',
             }
+        },
+        fontFamily: {
+            sans: ['"Times New Roman"', 'Times', 'serif'],
+            display: ['"Times New Roman"', 'Times', 'serif'],
         },
     },
     plugins: [],

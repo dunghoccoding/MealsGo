@@ -38,7 +38,7 @@ export default function RecommendationSection({ type, productId, title, limit = 
                     <SectionIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-display font-black text-slate-800 tracking-tight">
+                    <h2 className="text-2xl font-display font-bold text-slate-800 tracking-tight">
                         {sectionTitle}
                     </h2>
                     <p className="text-sm text-slate-400 font-medium">

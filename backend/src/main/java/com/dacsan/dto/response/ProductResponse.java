@@ -31,4 +31,5 @@ public class ProductResponse {
     private Double rating;
     private Integer reviewCount;
     private List<VariantGroupResponse> variantGroups = new ArrayList<>();
+    private BigDecimal listingFee;
 }
