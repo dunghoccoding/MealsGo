@@ -35,14 +35,14 @@ public class Address {
     @Column(nullable = false)
     private String addressLine;
 
-    private String ward; // Phường/Xã
-    private String district; // Quận/Huyện
-    private String city; // Thành phố
+    private String ward;
+    private String district;
+    private String city;
 
     @Column(nullable = false)
     private Boolean isDefault = false;
 
-    private String label; // "Nhà riêng", "Công ty", etc.
+    private String label;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

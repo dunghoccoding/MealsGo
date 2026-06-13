@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../app/hooks'
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../features/auth/authSlice'
 import { useGetCartQuery } from '../../features/cart/cartApi'
+import api from '../../app/api'
 import { useState } from 'react'
 import { Search, ShoppingCart, User, Store, Settings, Package, LogOut, ChevronDown } from 'lucide-react'
 
@@ -16,6 +17,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         dispatch(logout())
+        dispatch(api.util.resetApiState())
         setShowUserMenu(false)
     }
 
@@ -35,7 +37,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2 group">
                         <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:bg-primary-500 transition-colors">
-                            <span className="font-display font-black text-xl">M</span>
+                            <span className="font-display font-bold text-xl">M</span>
                         </div>
                         <span className="text-xl font-display font-bold text-slate-800 tracking-tight">Meals<span className="text-primary-600">Go</span></span>
                     </Link>

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useRegisterMutation, type RegisterRequest } from '../../features/auth/authApi'
 import { useAppDispatch } from '../../app/hooks'
 import { setCredentials } from '../../features/auth/authSlice'
+import api from '../../app/api'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { User, Mail, Lock, Phone, Store, MapPin, Loader2, ArrowRight, UserCircle, ShoppingBag } from 'lucide-react'
@@ -80,10 +81,16 @@ export default function RegisterPage() {
             }
             const result = await registerUser(registerData).unwrap()
             dispatch(setCredentials(result))
+            dispatch(api.util.resetApiState())
             toast.success('Đăng ký thành công!')
 
             if (result.role === 'VENDOR') {
-                navigate('/vendor/dashboard')
+                if (result.requiresVerification) {
+                    toast.success('Đăng ký thành công! Vui lòng xác minh cửa hàng của bạn.')
+                    navigate('/vendor/verification')
+                } else {
+                    navigate('/vendor/dashboard')
+                }
             } else {
                 navigate('/')
             }
@@ -114,7 +121,7 @@ export default function RegisterPage() {
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
                     
                     <div className="text-center mb-10">
-                        <h2 className="text-4xl font-display font-black text-white mb-3 tracking-tight">
+                        <h2 className="text-4xl font-display font-bold text-white mb-3 tracking-tight">
                             Bắt đầu <span className="text-emerald-400">hành trình</span>
                         </h2>
                         <p className="text-emerald-100/60 font-medium">
@@ -237,7 +244,7 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full relative group/btn py-5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-display font-black text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center overflow-hidden pt-6"
+                            className="w-full relative group/btn py-5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-display font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center overflow-hidden pt-6"
                         >
                             <span className="relative z-10 flex items-center gap-2">
                                 {isLoading ? (
@@ -255,7 +262,7 @@ export default function RegisterPage() {
                     <div className="mt-10 pt-10 border-t border-white/5 text-center">
                         <p className="text-emerald-100/40 text-sm font-medium">
                             Đã có tài khoản?{' '}
-                            <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-black transition-colors underline decoration-emerald-500/30 underline-offset-4">
+                            <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors underline decoration-emerald-500/30 underline-offset-4">
                                 Đăng nhập ngay
                             </Link>
                         </p>

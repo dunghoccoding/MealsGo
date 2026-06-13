@@ -23,6 +23,7 @@ public class VendorStatsResponse {
 
     private List<DailyRevenue> revenueChart;
     private List<ProductSales> topProducts;
+    private BigDecimal walletBalance;
 
     @Data
     @AllArgsConstructor

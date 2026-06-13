@@ -163,7 +163,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Internal Server Error")
-                .message("An unexpected error occurred")
+                .message(ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred")
                 .path(request.getRequestURI())
                 .build();
 

@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useGetProductsQuery } from '../../features/products/productApi'
 import ProductCard from '../../components/product/ProductCard'
+import RecommendationSection from '../../components/product/RecommendationSection'
+import { useAppSelector } from '../../app/hooks'
+import { selectIsAuthenticated } from '../../features/auth/authSlice'
 import { LayoutGrid, MapPin, Loader2, AlertCircle } from 'lucide-react'
 
 export default function HomePage() {
     const [selectedRegion, setSelectedRegion] = useState<string>('')
     const [searchParams] = useSearchParams()
     const searchQuery = searchParams.get('search') || ''
+    const isAuthenticated = useAppSelector(selectIsAuthenticated)
 
     const { data, isLoading, error } = useGetProductsQuery({
         region: selectedRegion || undefined,
@@ -22,7 +26,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 opacity-20 bg-[url('/images/pic2.jpg')] bg-cover bg-center"></div>
                 <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/40 to-emerald-950"></div>
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-5xl md:text-7xl font-display font-black mb-6 tracking-tight text-white drop-shadow-xl">
+                    <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 tracking-tight text-white drop-shadow-xl">
                         Thưởng thức <span className="text-emerald-400">Đặc sản</span> Việt
                     </h1>
                     <p className="text-xl md:text-2xl text-emerald-100/80 font-light max-w-2xl mx-auto leading-relaxed">
@@ -79,8 +83,26 @@ export default function HomePage() {
                 </div>
             </div>
 
+            {/* Personalized Recommendations */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+                <RecommendationSection
+                    type="personalized"
+                    title={isAuthenticated ? 'Gợi ý cho bạn' : 'Món bán chạy'}
+                />
+            </div>
+
             {/* Products Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Section Title */}
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg">
+                        <LayoutGrid className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-display font-bold text-slate-800 tracking-tight">Tất cả món</h2>
+                        <p className="text-sm text-slate-400 font-medium">Khám phá toàn bộ thực đơn đặc sản</p>
+                    </div>
+                </div>
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 className="w-12 h-12 text-primary-600 animate-spin mb-4" />

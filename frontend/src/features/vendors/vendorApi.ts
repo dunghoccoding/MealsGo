@@ -21,6 +21,7 @@ export interface VendorStats {
     cancelledOrders: number
     revenueChart: DailyRevenue[]
     topProducts: ProductSales[]
+    walletBalance: number
 }
 
 export const vendorApi = api.injectEndpoints({
@@ -29,7 +30,15 @@ export const vendorApi = api.injectEndpoints({
             query: () => '/vendors/me/stats',
             providesTags: ['Orders'], // Refresh when orders change
         }),
+        topupWallet: builder.mutation<any, { amount: number }>({
+            query: (body) => ({
+                url: '/vendors/wallet/topup',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['User'], // Invalidate user to fetch new balance
+        }),
     }),
 })
 
-export const { useGetVendorStatsQuery } = vendorApi
+export const { useGetVendorStatsQuery, useTopupWalletMutation } = vendorApi

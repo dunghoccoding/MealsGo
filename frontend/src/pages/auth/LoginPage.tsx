@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useLoginMutation } from '../../features/auth/authApi'
 import { useAppDispatch } from '../../app/hooks'
 import { setCredentials } from '../../features/auth/authSlice'
+import api from '../../app/api'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
@@ -33,6 +34,7 @@ export default function LoginPage() {
         try {
             const result = await login(data).unwrap()
             dispatch(setCredentials(result))
+            dispatch(api.util.resetApiState())
             toast.success('Đăng nhập thành công!')
 
             if (result.role === 'VENDOR') {
@@ -64,7 +66,7 @@ export default function LoginPage() {
                         <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 mb-6 group-hover:scale-110 transition-transform duration-500">
                             <span className="text-3xl">🍜</span>
                         </div>
-                        <h2 className="text-4xl font-display font-black text-white mb-3 tracking-tight">
+                        <h2 className="text-4xl font-display font-bold text-white mb-3 tracking-tight">
                             Chào mừng <span className="text-emerald-400">trở lại</span>
                         </h2>
                         <p className="text-emerald-100/60 font-medium">
@@ -132,7 +134,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full relative group/btn py-5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-display font-black text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center overflow-hidden"
+                            className="w-full relative group/btn py-5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-display font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center overflow-hidden"
                         >
                             <span className="relative z-10 flex items-center gap-2">
                                 {isLoading ? (
@@ -150,7 +152,7 @@ export default function LoginPage() {
                     <div className="mt-10 pt-10 border-t border-white/5 text-center">
                         <p className="text-emerald-100/40 text-sm font-medium">
                             Chưa có tài khoản?{' '}
-                            <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-black transition-colors underline decoration-emerald-500/30 underline-offset-4">
+                            <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors underline decoration-emerald-500/30 underline-offset-4">
                                 Đăng ký ngay
                             </Link>
                         </p>

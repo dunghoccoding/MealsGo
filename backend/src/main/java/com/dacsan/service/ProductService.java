@@ -6,6 +6,7 @@ import com.dacsan.dto.response.ProductResponse;
 import com.dacsan.dto.response.VariantGroupResponse;
 import com.dacsan.dto.response.VariantResponse;
 import com.dacsan.entity.*;
+import com.dacsan.repository.ListingFeeRepository;
 import com.dacsan.repository.ProductRepository;
 import com.dacsan.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +30,10 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final VendorRepository vendorRepository;
+    private final ListingFeeRepository listingFeeRepository;
+
+    private static final BigDecimal PRODUCT_FEE = new BigDecimal("200000");
+    private static final BigDecimal MIN_MAINTENANCE_BALANCE = new BigDecimal("500000");
 
     public Page<ProductResponse> getAllProducts(
             Region region,
@@ -88,7 +97,32 @@ public class ProductService {
 
         product = productRepository.save(product);
 
-        return buildProductResponse(product);
+        // Calculate and save listing fee
+        long totalProductsListed = listingFeeRepository.countByVendorId(vendor.getId());
+        BigDecimal feeAmount = (totalProductsListed == 0) ? BigDecimal.ZERO : PRODUCT_FEE;
+
+        // Check wallet balance
+        BigDecimal currentBalance = vendor.getBalance() != null ? vendor.getBalance() : BigDecimal.ZERO;
+        BigDecimal remainingBalance = currentBalance.subtract(feeAmount);
+        if (remainingBalance.compareTo(MIN_MAINTENANCE_BALANCE) < 0) {
+            throw new RuntimeException("Số dư ví điện tử không đủ. Yêu cầu duy trì tối thiểu 500.000đ sau khi trừ phí đăng. Vui lòng nạp thêm tiền!");
+        }
+
+        // Deduct balance
+        vendor.setBalance(remainingBalance);
+        vendorRepository.save(vendor);
+
+        ListingFee listingFee = ListingFee.builder()
+                .vendor(vendor)
+                .product(product)
+                .amount(feeAmount)
+                .paidAt(LocalDateTime.now())
+                .build();
+        listingFeeRepository.save(listingFee);
+
+        ProductResponse response = buildProductResponse(product);
+        response.setListingFee(feeAmount);
+        return response;
     }
 
     @Transactional
@@ -176,6 +210,19 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         productRepository.delete(product);
+    }
+
+    public Map<String, Object> getListingFeeInfo() {
+        Vendor vendor = vendorRepository.findByUserId(getCurrentUserId())
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+        long totalProductsListed = listingFeeRepository.countByVendorId(vendor.getId());
+        BigDecimal nextFee = (totalProductsListed == 0) ? BigDecimal.ZERO : PRODUCT_FEE;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("nextFee", nextFee);
+        result.put("totalProductsListed", totalProductsListed);
+        return result;
     }
 
     private Long getCurrentUserId() {

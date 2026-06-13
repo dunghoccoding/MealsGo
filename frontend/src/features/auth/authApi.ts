@@ -25,6 +25,8 @@ export interface AuthResponse {
     fullName: string
     role: 'CUSTOMER' | 'VENDOR' | 'ADMIN'
     vendorId: number | null
+    requiresVerification?: boolean
+    balance?: number
 }
 
 export const authApi = api.injectEndpoints({
@@ -45,7 +47,11 @@ export const authApi = api.injectEndpoints({
             }),
             invalidatesTags: ['User'],
         }),
+        getMe: builder.query<AuthResponse, void>({
+            query: () => '/auth/me',
+            providesTags: ['User'],
+        }),
     }),
 })
 
-export const { useLoginMutation, useRegisterMutation } = authApi
+export const { useLoginMutation, useRegisterMutation, useGetMeQuery } = authApi

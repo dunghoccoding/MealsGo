@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -28,15 +30,24 @@ public class VendorController {
     @Operation(summary = "Get current vendor dashboard stats")
     public ResponseEntity<VendorStatsResponse> getMyStats() {
         User currentUser = SecurityUtils.getCurrentUser();
-        // The User entity might not have a direct vendor field mapped if it's OneToOne
-        // but not bidirectional in code
-        // However, I'll use the vendorService to find by userId which is safer if the
-        // relationship isn't direct in User class
-        VendorResponse vendor = vendorService.getAllVendors().stream()
-                .filter(v -> v.getUserId().equals(currentUser.getId()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Vendor profile not found"));
+        VendorResponse vendor = vendorService.getVendorByUserId(currentUser.getId());
         return ResponseEntity.ok(vendorService.getDashboardStats(vendor.getId()));
+    }
+
+    @PostMapping("/wallet/topup")
+    @PreAuthorize("hasRole('VENDOR')")
+    @Operation(summary = "Top up current vendor's wallet (Mock)")
+    public ResponseEntity<VendorResponse> topupWallet(@RequestBody Map<String, Object> payload) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        VendorResponse vendor = vendorService.getVendorByUserId(currentUser.getId());
+        
+        Object amountObj = payload.get("amount");
+        if (amountObj == null) {
+            throw new RuntimeException("Amount is required");
+        }
+        
+        BigDecimal amount = new BigDecimal(amountObj.toString());
+        return ResponseEntity.ok(vendorService.topupWallet(vendor.getId(), amount));
     }
 
     @GetMapping

@@ -8,6 +8,7 @@ import com.dacsan.dto.response.SubOrderResponse;
 import com.dacsan.entity.*;
 import com.dacsan.exception.NotFoundException;
 import com.dacsan.repository.*;
+import com.dacsan.repository.UserRepository;
 import com.dacsan.security.SecurityUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,7 @@ public class OrderService {
         private final CartRepository cartRepository;
         private final CartItemRepository cartItemRepository;
         private final VendorRepository vendorRepository;
+        private final UserRepository userRepository;
         private final VNPayService vnPayService;
         private final ObjectMapper objectMapper;
         private final NotificationService notificationService; // WebSocket notifications
@@ -144,8 +146,9 @@ public class OrderService {
 
                 log.info("Created {} sub-orders for order {}", subOrders.size(), orderNumber);
 
-                // 7. Clear cart
-                cartItemRepository.deleteAll(cart.getItems());
+                // 7. Clear cart - use orphanRemoval mechanism
+                cart.getItems().clear();
+                cartRepository.save(cart);
                 log.info("Cleared cart for user {}", currentUser.getId());
 
                 // 8. Send WebSocket notifications to vendors
@@ -295,6 +298,37 @@ public class OrderService {
 
                 log.info("Updated sub-order {} status to {}",
                                 subOrder.getSubOrderNumber(), request.getStatus());
+
+                // WALLET UPDATE: If status changed to DELIVERED, process earnings and commission
+                if (oldStatus != SubOrderStatus.DELIVERED && request.getStatus() == SubOrderStatus.DELIVERED) {
+                        Vendor vendor = subOrder.getVendor();
+                        BigDecimal subtotal = subOrder.getSubtotal() != null ? subOrder.getSubtotal() : BigDecimal.ZERO;
+                        
+                        BigDecimal adminCommission = new BigDecimal("500");
+                        BigDecimal vendorEarnings = subtotal.subtract(adminCommission);
+                        
+                        // Prevent negative earnings if order is somehow < 500
+                        if (vendorEarnings.compareTo(BigDecimal.ZERO) < 0) {
+                                vendorEarnings = BigDecimal.ZERO;
+                                adminCommission = subtotal;
+                        }
+
+                        // Add to Vendor Wallet
+                        BigDecimal currentVendorBalance = vendor.getBalance() != null ? vendor.getBalance() : BigDecimal.ZERO;
+                        vendor.setBalance(currentVendorBalance.add(vendorEarnings));
+                        vendorRepository.save(vendor);
+                        log.info("Added {} to vendor {} wallet. New balance: {}", vendorEarnings, vendor.getId(), vendor.getBalance());
+
+                        // Add to Admin Wallet
+                        List<User> admins = userRepository.findByRole(UserRole.ADMIN);
+                        if (!admins.isEmpty()) {
+                                User admin = admins.get(0);
+                                BigDecimal currentAdminBalance = admin.getBalance() != null ? admin.getBalance() : BigDecimal.ZERO;
+                                admin.setBalance(currentAdminBalance.add(adminCommission));
+                                userRepository.save(admin);
+                                log.info("Added {} commission to admin wallet", adminCommission);
+                        }
+                }
 
                 // Update main order status based on sub-order statuses
                 updateMainOrderStatus(subOrder.getOrder());
