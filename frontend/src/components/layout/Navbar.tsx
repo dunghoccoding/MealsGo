@@ -37,7 +37,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2 group">
                         <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:bg-primary-500 transition-colors">
-                            <span className="font-display font-black text-xl">M</span>
+                            <span className="font-display font-bold text-xl">M</span>
                         </div>
                         <span className="text-xl font-display font-bold text-slate-800 tracking-tight">Meals<span className="text-primary-600">Go</span></span>
                     </Link>

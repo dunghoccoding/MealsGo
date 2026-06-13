@@ -27,4 +27,5 @@ public class VendorResponse {
     private Boolean active;
     private Boolean verified;
     private LocalDateTime createdAt;
+    private java.math.BigDecimal balance;
 }

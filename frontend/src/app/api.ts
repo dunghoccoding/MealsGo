@@ -12,7 +12,7 @@ const api = createApi({
             return headers
         },
     }),
-    tagTypes: ['Products', 'Cart', 'Orders', 'Addresses', 'User'],
+    tagTypes: ['Products', 'Cart', 'Orders', 'Addresses', 'User', 'VendorDocuments', 'Vouchers'],
     endpoints: () => ({}), // Endpoints will be injected by feature modules
 })
 

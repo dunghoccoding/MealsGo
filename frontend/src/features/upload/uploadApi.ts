@@ -16,7 +16,6 @@ export const uploadApi = api.injectEndpoints({
                 url: '/upload/image',
                 method: 'POST',
                 body: formData,
-                formData: true,
             }),
         }),
     }),

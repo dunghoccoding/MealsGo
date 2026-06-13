@@ -122,7 +122,7 @@ export default function Footer() {
                         <div className="space-y-8">
                             <Link to="/" className="flex items-center space-x-3 group">
                                 <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20 group-hover:bg-primary-500 transition-all">
-                                    <span className="font-display font-black text-xl">M</span>
+                                    <span className="font-display font-bold text-xl">M</span>
                                 </div>
                                 <span className="text-2xl font-display font-bold tracking-tight">Meal<span className="text-primary-500">Go</span></span>
                             </Link>

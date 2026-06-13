@@ -7,59 +7,42 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
 
 @Entity
-@Table(name = "vendors")
+@Table(name = "vendor_documents")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Vendor {
+public class VendorDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
-
-    @Column(nullable = false)
-    private String storeName;
-
-    @Column(length = 1000)
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_id", nullable = false)
+    private Vendor vendor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Region region;
+    private DocumentType documentType;
 
     @Column(nullable = false)
-    private String address;
-
-    private String phone;
-
-    private String logo;
-
-    private String banner;
-
-    @Column(columnDefinition = "DECIMAL(3,2) DEFAULT 0.0")
-    private Double rating = 0.0;
-
-    @Column(columnDefinition = "INTEGER DEFAULT 0")
-    private Integer totalReviews = 0;
+    private String fileUrl;
 
     @Column(nullable = false)
-    private Boolean active = true;
+    private String fileName;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Boolean verified = false; // Admin approval required
+    @Builder.Default
+    private DocumentStatus status = DocumentStatus.PENDING;
 
-    @Column(precision = 19, scale = 2)
-    private BigDecimal balance = BigDecimal.ZERO;
+    @Column(length = 1000)
+    private String reviewNote;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

@@ -18,4 +18,5 @@ public class AuthResponse {
     private String fullName;
     private UserRole role;
     private Long vendorId; // null if not vendor
+    private Boolean requiresVerification;
 }

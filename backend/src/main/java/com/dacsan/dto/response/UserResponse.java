@@ -22,4 +22,5 @@ public class UserResponse {
     private Boolean active;
     private LocalDateTime createdAt;
     private Long vendorId; // null if not vendor
+    private java.math.BigDecimal balance;
 }
