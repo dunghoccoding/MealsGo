@@ -8,6 +8,7 @@ import com.dacsan.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,8 @@ public class OrderController {
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     @Operation(summary = "Create order from cart", description = "Creates main order and splits into sub-orders by vendor. Clears cart after creation.")
-    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
-        return ResponseEntity.ok(orderService.createOrder(request));
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(orderService.createOrder(request, httpServletRequest));
     }
 
     @GetMapping
