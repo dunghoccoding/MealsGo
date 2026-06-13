@@ -10,6 +10,7 @@ export interface UserProfile {
     active: boolean
     createdAt: string
     vendorId: number | null
+    balance?: number
 }
 
 export interface ChangePasswordRequest {

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useAppSelector } from '../../app/hooks'
 import { selectCurrentUser } from '../../features/auth/authSlice'
-import { useGetMeQuery } from '../../features/auth/authApi'
+import { useGetCurrentUserQuery } from '../../features/user/userApi'
 import {
     useGetAdminProductsQuery,
     useAdminUpdateProductMutation,
@@ -32,7 +32,7 @@ const categoryLabel = (c: string) => CATEGORIES.find(x => x.value === c)?.label 
 
 export default function AdminDashboardPage() {
     const user = useAppSelector(selectCurrentUser)
-    const { data: meData } = useGetMeQuery(undefined, { pollingInterval: 15000 })
+    const { data: meData } = useGetCurrentUserQuery(undefined, { pollingInterval: 15000 })
     const { data: productsData, isLoading } = useGetAdminProductsQuery({ size: 50 })
     const [updateProduct, { isLoading: updating }] = useAdminUpdateProductMutation()
     const [deleteProduct] = useAdminDeleteProductMutation()
