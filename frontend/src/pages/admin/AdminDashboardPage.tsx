@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
     const [activeTab, setActiveTab] = useState<Tab>('products')
 
     // Vendor Document Hooks
-    const { data: pendingVendors, isLoading: loadingVendors } = useGetPendingVendorsQuery()
+    const { data: pendingVendors, isLoading: loadingVendors, isError, error, refetch } = useGetPendingVendorsQuery(undefined, { refetchOnMountOrArgChange: true })
     const [reviewDocument] = useReviewDocumentMutation()
     const [reviewNote, setReviewNote] = useState('')
 
@@ -426,9 +426,18 @@ export default function AdminDashboardPage() {
 
             {activeTab === 'vendors' && (
                 <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-gray-900">Duyệt hồ sơ cửa hàng</h2>
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-4">
+                        Duyệt hồ sơ cửa hàng
+                        <button onClick={() => refetch()} className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">🔄 Làm mới</button>
+                    </h2>
                     {loadingVendors ? (
                         <div className="text-center py-8 text-gray-500">Đang tải...</div>
+                    ) : isError ? (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center text-red-600">
+                            <p className="font-bold mb-2">❌ Lỗi khi tải danh sách hồ sơ!</p>
+                            <p className="text-sm opacity-80">{error && typeof error === 'object' && 'status' in error ? `Mã lỗi: ${(error as any).status}` : 'Không thể kết nối đến máy chủ.'}</p>
+                            <button onClick={() => refetch()} className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 rounded text-sm font-medium transition-colors">Thử lại</button>
+                        </div>
                     ) : pendingVendors && pendingVendors.length > 0 ? (
                         pendingVendors.map(vendor => (
                             <div key={vendor.id} className="bg-white border rounded-xl shadow-sm p-6">

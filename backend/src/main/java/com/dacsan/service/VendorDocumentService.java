@@ -55,9 +55,21 @@ public class VendorDocumentService {
                 .collect(Collectors.toList());
     }
 
-    public List<VendorDocumentResponse> getAllPendingDocuments() {
-        return vendorDocumentRepository.findByStatus(DocumentStatus.PENDING).stream()
-                .map(this::mapToResponse)
+    @Transactional(readOnly = true)
+    public List<com.dacsan.dto.response.PendingVendorResponse> getPendingVendors() {
+        List<VendorDocument> pendingDocs = vendorDocumentRepository.findByStatus(DocumentStatus.PENDING);
+        return pendingDocs.stream()
+                .map(VendorDocument::getVendor)
+                .distinct()
+                .map(vendor -> com.dacsan.dto.response.PendingVendorResponse.builder()
+                        .id(vendor.getId())
+                        .storeName(vendor.getStoreName())
+                        .user(com.dacsan.dto.response.PendingVendorResponse.UserInfo.builder()
+                                .fullName(vendor.getUser().getFullName())
+                                .email(vendor.getUser().getEmail())
+                                .build())
+                        .documents(getDocumentsByVendor(vendor.getId()))
+                        .build())
                 .collect(Collectors.toList());
     }
 

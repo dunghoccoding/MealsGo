@@ -1,15 +1,26 @@
 import { Routes, Route, Link } from 'react-router-dom'
+import MainLayout from './components/layout/MainLayout'
+
+// Auth Pages
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
-import MainLayout from './components/layout/MainLayout'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+
+// Customer Pages
 import HomePage from './pages/customer/HomePage'
 import ProductDetailPage from './pages/customer/ProductDetailPage'
 import CartPage from './pages/customer/CartPage'
 import ProfilePage from './pages/customer/ProfilePage'
 import CheckoutPage from './pages/customer/CheckoutPage'
+
+// Vendor Pages
 import VendorDashboardPage from './pages/vendor/VendorDashboardPage'
 import VendorVerificationPage from './pages/vendor/VendorVerificationPage'
+
+// Admin Pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+
 import { Toaster } from 'sonner'
 import NotificationToast from './components/common/NotificationToast'
 import { Utensils, LogIn, ChevronRight, Globe, MapPin } from 'lucide-react'
@@ -23,11 +34,13 @@ function App() {
         {/* Landing page without layout */}
         <Route path="/landing" element={<LandingPage />} />
 
-        {/* Auth pages without layout */}
+        {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Main app with layout */}
+        {/* Public Routes with Navbar */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />

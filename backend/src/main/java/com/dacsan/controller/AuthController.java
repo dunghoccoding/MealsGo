@@ -6,6 +6,7 @@ import com.dacsan.dto.response.AuthResponse;
 import com.dacsan.dto.response.UserResponse;
 import com.dacsan.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,26 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated user")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<UserResponse> getCurrentUser() {
         return ResponseEntity.ok(authService.getCurrentUser());
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset email")
+    public ResponseEntity<java.util.Map<String, String>> forgotPassword(@Valid @RequestBody com.dacsan.dto.request.ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Nếu email tồn tại, link đặt lại mật khẩu đã được gửi.");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using token")
+    public ResponseEntity<java.util.Map<String, String>> resetPassword(@Valid @RequestBody com.dacsan.dto.request.ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Đặt lại mật khẩu thành công.");
+        return ResponseEntity.ok(response);
     }
 }

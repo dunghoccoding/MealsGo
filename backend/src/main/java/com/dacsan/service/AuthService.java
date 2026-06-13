@@ -31,6 +31,8 @@ public class AuthService {
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthenticationManager authenticationManager;
+        private final com.dacsan.repository.PasswordResetTokenRepository tokenRepository;
+        private final EmailService emailService;
 
         @Transactional
         public AuthResponse register(RegisterRequest request) {
@@ -168,5 +170,54 @@ public class AuthService {
                                 .vendorId(vendorId)
                                 .balance(user.getBalance())
                                 .build();
+        }
+
+        @Transactional
+        public void forgotPassword(String email) {
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản với email này."));
+
+                // Xoá token cũ nếu có
+                tokenRepository.deleteByUser(user);
+
+                // Tạo token mới (UUID)
+                String token = java.util.UUID.randomUUID().toString();
+                
+                com.dacsan.entity.PasswordResetToken resetToken = com.dacsan.entity.PasswordResetToken.builder()
+                                .token(token)
+                                .user(user)
+                                .expiryDate(java.time.LocalDateTime.now().plusMinutes(15)) // 15 phút
+                                .build();
+                tokenRepository.save(resetToken);
+
+                // Gửi email
+                String resetLink = "http://localhost:5173/reset-password?token=" + token;
+                String subject = "Yêu cầu đặt lại mật khẩu - Đặc Sản Việt";
+                String text = "Xin chào " + user.getFullName() + ",\n\n"
+                                + "Bạn vừa yêu cầu đặt lại mật khẩu. Vui lòng bấm vào đường link dưới đây để thiết lập mật khẩu mới:\n\n"
+                                + resetLink + "\n\n"
+                                + "Đường link này sẽ hết hạn sau 15 phút.\n"
+                                + "Nếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng bỏ qua email này.\n\n"
+                                + "Trân trọng,\nĐội ngũ Đặc Sản Việt.";
+                
+                emailService.sendSimpleMessage(user.getEmail(), subject, text);
+        }
+
+        @Transactional
+        public void resetPassword(String token, String newPassword) {
+                com.dacsan.entity.PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                                .orElseThrow(() -> new RuntimeException("Mã xác nhận không hợp lệ hoặc đã hết hạn."));
+
+                if (resetToken.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+                        tokenRepository.delete(resetToken);
+                        throw new RuntimeException("Mã xác nhận đã hết hạn. Vui lòng yêu cầu lại.");
+                }
+
+                User user = resetToken.getUser();
+                user.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+
+                // Xoá token sau khi dùng
+                tokenRepository.delete(resetToken);
         }
 }
