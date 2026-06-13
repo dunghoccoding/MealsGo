@@ -108,6 +108,12 @@
             <artifactId>flyway-mysql</artifactId>
         </dependency>
         
+        <!-- Spring Mail (Email OTP) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Actuator for health checks -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
