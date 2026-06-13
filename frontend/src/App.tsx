@@ -8,6 +8,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
 // Customer Pages
+import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/customer/HomePage'
 import ProductDetailPage from './pages/customer/ProductDetailPage'
 import CartPage from './pages/customer/CartPage'

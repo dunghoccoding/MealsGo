@@ -99,7 +99,7 @@ export default function LoginPage() {
                             <div className="relative group/input">
                                 <div className="flex justify-between items-center mb-2 mx-1">
                                     <label className="text-xs font-bold text-emerald-100/40 uppercase tracking-widest block">Mật khẩu</label>
-                                    <Link to="#" className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest">Quên?</Link>
+                                    <Link to="/forgot-password" className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest">Quên?</Link>
                                 </div>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-100/30 group-focus-within/input:text-emerald-400 transition-colors">

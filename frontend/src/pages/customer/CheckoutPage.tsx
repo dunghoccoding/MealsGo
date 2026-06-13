@@ -56,6 +56,7 @@ export default function CheckoutPage() {
             toast.error('Vui lòng chọn địa chỉ giao hàng')
             return
         }
+
         try {
             const order = await createOrder({
                 addressId: selectedAddressId,
@@ -63,8 +64,15 @@ export default function CheckoutPage() {
                 notes: notes || undefined,
                 ...(voucherValid && voucherCode ? { voucherCode } : {}),
             }).unwrap()
+
+            if (paymentMethod === 'BANK_TRANSFER' && order.paymentUrl) {
+                window.location.href = order.paymentUrl
+                return
+            }
+
             toast.success(`Đặt hàng thành công! Đơn #${order.orderNumber}`)
             navigate('/profile?tab=orders')
+
         } catch (err: any) {
             toast.error(err?.data?.message || 'Đặt hàng thất bại')
         }

@@ -79,4 +79,26 @@ public class JwtTokenProvider {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    /** Sinh reset token JWT có hiệu lực 10 phút (chỉ dùng cho reset password) */
+    public String generateResetToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "RESET");
+        return buildToken(claims, userDetails, 10 * 60 * 1000L); // 10 phút
+    }
+
+    /** Kiểm tra token hợp lệ và chưa hết hạn */
+    public boolean validateToken(String token) {
+        try {
+            extractAllClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /** Lấy email (subject) từ token */
+    public String getEmailFromToken(String token) {
+        return extractUsername(token);
+    }
 }

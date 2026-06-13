@@ -61,6 +61,16 @@ export const authApi = api.injectEndpoints({
                 body,
             }),
         }),
+    }),
+})
+
+export const {
+    useLoginMutation,
+    useRegisterMutation,
+    useForgotPasswordMutation,
+    useVerifyOtpMutation,
+    useResetPasswordMutation,
+} = authApi
         getMe: builder.query<AuthResponse, void>({
             query: () => '/auth/me',
             providesTags: ['User'],
