@@ -41,8 +41,8 @@ public class AuthService {
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthenticationManager authenticationManager;
+        private final com.dacsan.repository.PasswordResetTokenRepository tokenRepository;
         private final EmailService emailService;
-
 
         @Transactional
         public AuthResponse register(RegisterRequest request) {

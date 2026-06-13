@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     private final ProductService productService;
+    private final com.dacsan.service.VendorDocumentService documentService;
 
     @GetMapping("/products")
     @Operation(summary = "Get all products (Admin)")
@@ -59,5 +60,19 @@ public class AdminController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.adminDeleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/vendors/pending")
+    @Operation(summary = "Get vendors with pending documents (Admin)")
+    public ResponseEntity<java.util.List<com.dacsan.dto.response.PendingVendorResponse>> getPendingVendors() {
+        return ResponseEntity.ok(documentService.getPendingVendors());
+    }
+
+    @PatchMapping("/vendor-documents/{id}")
+    @Operation(summary = "Review vendor document (Admin)")
+    public ResponseEntity<com.dacsan.dto.response.VendorDocumentResponse> reviewDocument(
+            @PathVariable Long id,
+            @Valid @RequestBody com.dacsan.dto.request.ReviewDocumentRequest request) {
+        return ResponseEntity.ok(documentService.reviewDocument(id, request.getStatus(), request.getReviewNote()));
     }
 }

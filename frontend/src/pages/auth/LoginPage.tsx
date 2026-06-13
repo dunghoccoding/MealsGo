@@ -120,15 +120,18 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <div className="flex items-center">
-                            <input
-                                id="remember-me"
-                                type="checkbox"
-                                className="w-5 h-5 bg-white/5 border-white/10 rounded-lg text-emerald-500 focus:ring-emerald-500 focus:ring-offset-emerald-950 transition-all cursor-pointer"
-                            />
-                            <label htmlFor="remember-me" className="ml-3 block text-sm text-emerald-100/60 font-medium cursor-pointer">
-                                Ghi nhớ đăng nhập của tôi
-                            </label>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-emerald-500 focus:ring-emerald-500 border-emerald-900 rounded" />
+                                <label htmlFor="remember-me" className="ml-2 block text-sm text-emerald-100/60 font-medium cursor-pointer">
+                                    Ghi nhớ đăng nhập
+                                </label>
+                            </div>
+                            <div className="text-sm">
+                                <Link to="/forgot-password" className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">
+                                    Quên mật khẩu?
+                                </Link>
+                            </div>
                         </div>
 
                         <button
