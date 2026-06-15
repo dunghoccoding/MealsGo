@@ -124,7 +124,7 @@ export default function Footer() {
                                 <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20 group-hover:bg-primary-500 transition-all">
                                     <span className="font-display font-bold text-xl">M</span>
                                 </div>
-                                <span className="text-2xl font-display font-bold tracking-tight">Meal<span className="text-primary-500">Go</span></span>
+                                <span className="text-2xl font-display font-bold tracking-tight">Meals<span className="text-primary-500">Go</span></span>
                             </Link>
                             <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-light">
                                 Hành trình khám phá hương vị đặc sắc từ ba miền Bắc - Trung - Nam, mang tinh hoa bếp Việt đến tận cửa nhà bạn.
